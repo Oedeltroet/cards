@@ -1,0 +1,105 @@
+.card img {
+    
+    /* position of the top left card */
+    position: relative;
+    top: -1.9rem;
+    left: -1.87rem;
+}
+
+
+
+    /* SUITS */
+
+.hearts {
+
+    position: relative;
+    top: -35.6rem;
+}
+
+.diamonds {
+
+    position: relative;
+    top: -71.2rem;
+}
+
+.spades {
+
+    position: relative;
+    top: -106.85rem;
+}
+
+
+
+    /* VALUES */
+
+.\32 {
+
+    position: relative;
+    left: -24.35rem;
+}
+
+.\33 {
+
+    position: relative;
+    left: -48.7rem;
+}
+
+.\34 {
+
+    position: relative;
+    left: -73.1rem;
+}
+
+.\35 {
+
+    position: relative;
+    left: -97.48rem;
+}
+
+.\36 {
+
+    position: relative;
+    left: -121.85rem;
+}
+
+.\37 {
+
+    position: relative;
+    left: -146.25rem;
+}
+
+.\38 {
+
+    position: relative;
+    left: -170.6rem;
+}
+
+.\39 {
+
+    position: relative;
+    left: -195rem;
+}
+
+.\31 0 {
+
+    position: relative;
+    left: -219.35rem;
+}
+
+.J {
+
+    position: relative;
+    left: -243.75rem;
+}
+
+.Q {
+
+    position: relative;
+    left: -268.1rem;
+}
+
+.K {
+
+    position: relative;
+    left: -292.5rem;
+}
