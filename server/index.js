@@ -22,4 +22,5 @@ io.on("connection", (socket) => {
   console.log("A user has connected.");
 });
 
+console.log("Starting server...");
 httpServer.listen(3000);
