@@ -8,7 +8,13 @@ const httpServer = createServer({
   cert: readFileSync("/etc/letsencrypt/live/cards.oedel.me/cert.pem"),
 });
 
-const io = new Server(httpServer, { /* options */ });
+const io = new Server(httpServer, {
+    
+    cors: {
+
+        origin: "https://cards.oedel.me"
+    }
+});
 
 io.on("connection", (socket) => {
 
