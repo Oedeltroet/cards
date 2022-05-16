@@ -11,8 +11,9 @@ const httpServer = createServer({
 const io = new Server(httpServer, {
     
     cors: {
-
-        origin: "https://cards.oedel.me"
+        
+        origin: "https://cards.oedel.me",
+        methods: ["GET", "POST"]
     }
 });
 
