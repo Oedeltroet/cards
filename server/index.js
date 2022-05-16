@@ -1,22 +1,17 @@
-const express = require('express');
-const app = express();
-const http = require('http');
-const server = http.createServer(app);
-const { Server } = require("socket.io");
-const io = new Server(server, {
+import { readFileSync } from "fs";
+import { createServer } from "https";
+import { Server } from "socket.io";
 
-    cors: {
-
-        origin: "http://127.0.0.1:5500"
-    }
+const httpServer = createServer({
+  key: readFileSync("/etc/letsencrypt/live/cards.oedel.me/privkey.pem"),
+  cert: readFileSync("/etc/letsencrypt/live/cards.oedel.me/cert.pem"),
 });
 
-io.on('connection', (socket) => {
+const io = new Server(httpServer, { /* options */ });
 
-    console.log('a user connected');
+io.on("connection", (socket) => {
+  console.log("A user has connected.");
+  // ...
 });
 
-server.listen(3000, () => {
-
-    console.log('listening on *:3000');
-});
+httpServer.listen(3000);
