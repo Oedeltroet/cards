@@ -19,7 +19,7 @@ var data = {
 function mainMenu() {
 
     let text = document.createElement("p");
-    text.innerText = "Choose a game to play"
+    text.innerText = "Choose a game"
     text.setAttribute("id", "choose-a-game");
 
     document.body.innerHTML = "";
