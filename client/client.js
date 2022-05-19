@@ -1,20 +1,6 @@
-var data = {
-
-    "games" : [
-
-        {
-            "name" : "Skip-Bo",
-            "icon" : "img/thumbnails/skip-bo.png",
-            "script" : "scripts/games/skip-bo.js"
-        },
-        
-        {
-            "name" : "UNO",
-            "icon" : "https://upload.wikimedia.org/wikipedia/commons/f/f9/UNO_Logo.svg",
-            "script" : "scripts/games/uno.js"
-        }
-    ]
-};
+var socket = io("http://localhost:3000", { transports : ['websocket'] });
+//var socket = io("https://cards.oedel.me:3000", { transports : ['websocket'] });
+var data = {};
 
 function mainMenu() {
 
@@ -49,7 +35,7 @@ function mainMenu() {
 
             script.onload = function() {
 
-                init();
+                init(socket, i);
             };
         }
 
@@ -64,5 +50,20 @@ function mainMenu() {
 
 window.onload = function() {
 
-    mainMenu();
+    socket.on("connect", () => {
+
+        console.log("Connected to the server.");
+
+        socket.emit("requestData");
+        socket.on("sendData", serverData => {
+
+            data = serverData;
+            mainMenu();
+        });
+    });
+
+    socket.on("disconnect", () => {
+
+        console.log("Disconnected from the server.")
+    });
 };

@@ -1,12 +1,29 @@
-var debug = false;
+const data = {
+
+  "games" : [
+
+      {
+          "name" : "Skip-Bo",
+          "icon" : "img/thumbnails/skip-bo.png",
+          "script" : "scripts/games/skip-bo.js"
+      },
+      
+      {
+          "name" : "UNO",
+          "icon" : "https://upload.wikimedia.org/wikipedia/commons/f/f9/UNO_Logo.svg",
+          "script" : "scripts/games/uno.js"
+      }
+  ]
+};
+
+var debug = true;
 var server, io;
+var rooms = {};
 
 if (debug) {
 
   server = require("http").createServer();
-  io = require("socket.io")(server, {
-    // ...
-  });
+  io = require("socket.io")(server, {});
 }
 
 else {
@@ -36,15 +53,26 @@ else {
   });
 }
 
-
 io.on("connection", (socket) => {
 
   console.log("A user has connected.");
-});
 
-io.on("createGame", (socket) => {
+  socket.on("disconnect", () => {
 
-  console.log("Creating new game.");
+    console.log("A user has disconnected.");
+  });
+
+  socket.on("requestData", () => {
+
+    console.log("Sending data.");
+    socket.emit("sendData", data);
+  });
+
+  socket.on("createGame", (gameId) => {
+
+    console.log("Creating new game.");
+    console.log("You want to play " + data.games[gameId].name + "!");
+  });
 });
 
 console.log("Starting server...");
