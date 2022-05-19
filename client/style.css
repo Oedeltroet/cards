@@ -8,6 +8,9 @@
 
 body {
 
+    margin-top: 20px;
+    margin-bottom: 20px;
+
     background-color: rgb(0, 120, 60);
 }
 
@@ -20,13 +23,11 @@ p {
 #choose-a-game {
 
     font-size: 16pt;
-    margin-top: 20px;
 }
 
 #game-list {
 
     margin-top: 20px;
-
     display: grid;
     gap: 20px;
     grid-template-columns: repeat(auto-fit, 128px);
