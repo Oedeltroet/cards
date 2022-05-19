@@ -1,12 +1,12 @@
 function init() {
 
-    document.body.innerHTML = "<div id='menu'><button id='host' onclick='createGame()'>Create game</button></div>";
+    document.body.innerHTML = "<div id='menu'><button id='host' onclick='createGame'>Create game</button></div>";
 
-    //var socket = io("https://localhost:3000");
-    var socket = io("https://cards.oedel.me:3000");
+    //var socket = io("http://localhost:3000", { transports : ['websocket'] });
+    var socket = io("https://cards.oedel.me:3000", { transports : ['websocket'] });
 
-    // function createGame() {
+    function createGame() {
 
-    //     socket.emit("createGame");
-    // }
+        socket.emit("createGame");
+    }
 };
