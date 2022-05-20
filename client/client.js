@@ -1,5 +1,4 @@
-var socket = io("http://localhost:3000", { transports : ['websocket'] });
-//var socket = io("https://cards.oedel.me:3000", { transports : ['websocket'] });
+var socket;
 var data = {};
 
 function mainMenu() {
@@ -49,6 +48,9 @@ function mainMenu() {
 }
 
 window.onload = function() {
+
+    socket = io("http://localhost:3000", { transports : ['websocket'] });
+    //socket = io("https://cards.oedel.me:3000", { transports : ['websocket'] });
 
     socket.on("connect", () => {
 

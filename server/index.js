@@ -18,7 +18,6 @@ const data = {
 
 var debug = true;
 var server, io;
-var rooms = {};
 
 if (debug) {
 
@@ -53,6 +52,8 @@ else {
   });
 }
 
+const rooms = io.of("/").adapter.rooms;
+
 io.on("connection", (socket) => {
 
   console.log("A user has connected.");
@@ -67,11 +68,28 @@ io.on("connection", (socket) => {
     console.log("Sending data.");
     socket.emit("sendData", data);
   });
-
+  
   socket.on("createGame", (gameId) => {
 
-    console.log("Creating new game.");
-    console.log("You want to play " + data.games[gameId].name + "!");
+    console.log("Creating new " + data.games[gameId].name + " game.");
+
+    var roomName = "";
+    var chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+
+    for (var i = 0; i < 5; i++) {
+
+      roomName += chars[Math.floor(Math.random() * chars.length)];
+    }
+
+    socket.join(roomName);
+    socket.emit("gameCreated", roomName);
+
+    console.log(rooms);
+  });
+
+  socket.on("joinGame", (roomName) => {
+
+    socket.join(roomName);
   });
 });
 
