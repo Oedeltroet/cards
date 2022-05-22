@@ -18,6 +18,7 @@ const data = {
 
 var debug = true;
 var server, io;
+var games;
 
 if (debug) {
 
@@ -83,6 +84,7 @@ io.on("connection", (socket) => {
 
     socket.join(roomName);
     socket.emit("gameCreated", roomName);
+    socket.emit("becomeLeader");
 
     console.log(rooms);
   });
@@ -90,6 +92,50 @@ io.on("connection", (socket) => {
   socket.on("joinGame", (roomName) => {
 
     socket.join(roomName);
+    socket.emit("successfullyJoined", roomName);
+
+    if (io.sockets.adapter.rooms.get(roomName).size >= 2) {
+
+      console.log("The game is ready.");
+      io.to(roomName).emit("gameReady");
+    }
+
+    console.log(rooms);
+  });
+
+  socket.on("startGame", (gameId, roomName) => {
+
+    switch (gameId) {
+
+      case 0:
+
+        /* SKIP-BO */
+
+        var SkipBo = require("./" + data.games[gameId].script);
+
+        break;
+
+      default: break;
+    }
+
+    io.to(roomName).emit("gameStarted");
+  });
+
+  socket.on("letsPlay", (gameId) => {
+
+    switch (gameId) {
+
+      case 0:
+
+        /* SKIP-BO */
+
+        var SkipBo = require("./" + data.games[gameId].script);
+        var Gamestate = new SkipBo.Gamestate();
+
+        break;
+
+      default: break;
+    }
   });
 });
 
