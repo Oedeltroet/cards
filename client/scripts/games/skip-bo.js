@@ -82,14 +82,14 @@ function openLobby(socket, gameId, roomName) {
         });
     });
 
-    socket.on("gameStarted", () => {
+    socket.on("gameStarted", (players) => {
 
         console.log("The game has started.")
         game(socket, gameId);
     });
 }
 
-function game(socket, gameId) {
+function game(socket, gameId, players) {
 
     document.body.innerHTML = "";
 

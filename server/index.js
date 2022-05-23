@@ -105,6 +105,8 @@ io.on("connection", (socket) => {
 
   socket.on("startGame", (gameId, roomName) => {
 
+    let numPlayers = io.sockets.adapter.rooms.get(roomName).size;
+
     switch (gameId) {
 
       case 0:
@@ -112,6 +114,9 @@ io.on("connection", (socket) => {
         /* SKIP-BO */
 
         var SkipBo = require("./" + data.games[gameId].script);
+        var game = new SkipBo.Gamestate(numPlayers, true);
+
+        console.log(game);
 
         break;
 
@@ -130,7 +135,6 @@ io.on("connection", (socket) => {
         /* SKIP-BO */
 
         var SkipBo = require("./" + data.games[gameId].script);
-        var Gamestate = new SkipBo.Gamestate();
 
         break;
 
