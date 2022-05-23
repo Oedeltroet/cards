@@ -7,9 +7,6 @@ const numBuildPiles = 4;
 
 class Gamestate {
 
-    // Create an array that will hold both the stockpile and the discard piles for each player.
-    playerCards = new Array();
-
     constructor(numPlayers, playWithPokerDecks = false) {
         
         // You can play with three poker decks instead of one Skip-Bo deck.
@@ -53,6 +50,9 @@ class Gamestate {
 
         // The amount of cards on a stock pile depends on the number of players.
         let stockPileSize = (numPlayers <= 4) ? 30 : 20;
+
+        // Create an array that will hold both the stockpile and the discard piles for each player.
+        this.playerCards = [];
 
         // Now the origin pile will be split up.
         for (let i = 0; i < numPlayers; i++) {

@@ -2,17 +2,50 @@ const data = {
 
   "games" : [
 
-      {
-          "name" : "Skip-Bo",
-          "icon" : "img/thumbnails/skip-bo.png",
-          "script" : "scripts/games/skip-bo.js"
-      },
-      
-      {
-          "name" : "UNO",
-          "icon" : "https://upload.wikimedia.org/wikipedia/commons/f/f9/UNO_Logo.svg",
-          "script" : "scripts/games/uno.js"
-      }
+    {
+      "name" : "Skip-Bo",
+      "icon" : "img/thumbnails/skip-bo.png",
+      "script" : "skip-bo.js"
+    },
+    
+    {
+      "name" : "UNO",
+      "icon" : "https://upload.wikimedia.org/wikipedia/commons/f/f9/UNO_Logo.svg",
+      "script" : "uno.js"
+    }
+  ],
+
+  "decks" : [
+
+    {
+      "name" : "Poker",
+      "styles" : [
+        
+        {
+          "name" : "English Pattern",
+          "image" : "english_pattern.svg",
+          "stylesheet" : "english_pattern.css"
+        }
+      ],
+      "suits" : [
+
+        "clubs", "hearts", "diamonds", "spades"
+      ],
+      "values" : [
+
+        "A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"
+      ]
+    },
+
+    {
+      "name" : "Skip-Bo",
+      "styles" : [],
+      "suits" : [],
+      "values" : [
+
+        "J", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12"
+      ]
+    }
   ]
 };
 
@@ -64,13 +97,13 @@ io.on("connection", (socket) => {
     console.log("A user has disconnected.");
   });
 
-  socket.on("requestData", () => {
+  socket.on("REQUEST_DATA", () => {
 
     console.log("Sending data.");
-    socket.emit("sendData", data);
+    socket.emit("SEND_DATA", data);
   });
   
-  socket.on("createGame", (gameId) => {
+  socket.on("CREATE_GAME", (gameId) => {
 
     console.log("Creating new " + data.games[gameId].name + " game.");
 
@@ -83,29 +116,37 @@ io.on("connection", (socket) => {
     }
 
     socket.join(roomName);
-    socket.emit("gameCreated", roomName);
-    socket.emit("becomeLeader");
+    socket.emit("GAME_CREATED", roomName);
+    socket.emit("BECOME_LEADER");
 
     console.log(rooms);
   });
 
-  socket.on("joinGame", (roomName) => {
+  socket.on("JOIN_GAME", (roomName) => {
 
-    socket.join(roomName);
-    socket.emit("successfullyJoined", roomName);
+    if (io. sockets. adapter. rooms. has(roomName)) {
 
-    if (io.sockets.adapter.rooms.get(roomName).size >= 2) {
+      socket.join(roomName);
+      socket.emit("JOIN_SUCCESSFUL", roomName);
+      console.log("A user joined room " + roomName);
 
-      console.log("The game is ready.");
-      io.to(roomName).emit("gameReady");
+      if (io.sockets.adapter.rooms.get(roomName).size >= 2) {
+
+        console.log("The game is ready.");
+        io.to(roomName).emit("GAME_READY");
+      }
     }
 
-    console.log(rooms);
+    else {
+
+      socket.emit("JOIN_FAILED_ROOM_NOT_FOUND", roomName);
+    }
   });
 
-  socket.on("startGame", (gameId, roomName) => {
+  socket.on("START_GAME", (gameId, roomName) => {
 
     let numPlayers = io.sockets.adapter.rooms.get(roomName).size;
+    let playWithPokerDecks = true;
 
     switch (gameId) {
 
@@ -113,8 +154,8 @@ io.on("connection", (socket) => {
 
         /* SKIP-BO */
 
-        var SkipBo = require("./" + data.games[gameId].script);
-        var game = new SkipBo.Gamestate(numPlayers, true);
+        var SkipBo = require("./scripts/games/" + data.games[gameId].script);
+        var game = new SkipBo.Gamestate(numPlayers, playWithPokerDecks);
 
         console.log(game);
 
@@ -123,10 +164,10 @@ io.on("connection", (socket) => {
       default: break;
     }
 
-    io.to(roomName).emit("gameStarted");
+    io.to(roomName).emit("GAME_STARTED", numPlayers, playWithPokerDecks ? data.decks[0] : data.decks[1], 0);
   });
 
-  socket.on("letsPlay", (gameId) => {
+  socket.on("LETS_PLAY", (gameId) => {
 
     switch (gameId) {
 
@@ -134,7 +175,7 @@ io.on("connection", (socket) => {
 
         /* SKIP-BO */
 
-        var SkipBo = require("./" + data.games[gameId].script);
+        var SkipBo = require("./scripts/games/" + data.games[gameId].script);
 
         break;
 

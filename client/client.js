@@ -29,7 +29,7 @@ function mainMenu() {
 
             let script = document.createElement("script");
             script.type = "text/javascript";
-            script.src = data.games[i].script;
+            script.src = "scripts/games/" + data.games[i].script;
             document.getElementsByTagName("head")[0].appendChild(script);
 
             script.onload = function() {
@@ -56,8 +56,8 @@ window.onload = function() {
 
         console.log("Connected to the server.");
 
-        socket.emit("requestData");
-        socket.on("sendData", serverData => {
+        socket.emit("REQUEST_DATA");
+        socket.on("SEND_DATA", serverData => {
 
             data = serverData;
             mainMenu();
