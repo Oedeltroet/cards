@@ -1,7 +1,7 @@
 * {
 
-    margin: 0;
-    padding: 0;
+    margin: 0%;
+    padding: 0%;
     box-sizing: border-box;
     text-align: center;
 }
@@ -67,12 +67,28 @@ p {
 
 .card {
 
-    top: 20px;
-    left: 20px;
+    border: 5px solid transparent;
 
-    max-width: 361px;
-    max-height: 541px;
+    max-width: 371px;
+    max-height: 551px;
     overflow: hidden;
 
-    transform:scale(.5);
+    --scale: 0.5;
+
+    transform: scale(var(--scale));
+    transform-origin: top left;
+    margin-bottom: calc((var(--scale) - 1) * 36rem);
+}
+
+.card:hover {
+
+    border-radius: 36px;
+    border: 5px solid yellow;
+}
+
+.pile {
+
+    margin: 10px;
+    display: grid;
+    
 }

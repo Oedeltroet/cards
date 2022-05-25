@@ -132,18 +132,37 @@ function game(socket, gameId, players, deck, deckStyle) {
         /* CREATE THE PILES */
 
     let imagePath = "img/decks/" + deck.styles[deckStyle].image;
-    let image = document.createElement("img");
-    image.src = imagePath;
 
+    // draw pile
+    let drawPileTopCard = document.createElement("div");
+    drawPileTopCard.className = "spades 7"; // change to "hidden"
+    drawPileTopCard.appendChild(document.createElement("img")).src = imagePath;
     let drawPile = document.createElement("div");
-    drawPile.className = "spades 7"; // change to "hidden"
-    drawPile.appendChild(image);
-
+    drawPile.className = "card";
+    drawPile.appendChild(drawPileTopCard);
+    let drawPileAmount = document.createElement("p");
+    drawPileAmount.innerText = "Draw Pile";
     let drawPileContainer = document.createElement("div");
-    drawPileContainer.className = "card";
+    drawPileContainer.className = "pile";
     drawPileContainer.appendChild(drawPile);
+    drawPileContainer.appendChild(drawPileAmount);
+
+    // own stock pile
+    let stockPileTopCard = document.createElement("div");
+    stockPileTopCard.className = "diamonds Q"; // change to "hidden"
+    stockPileTopCard.appendChild(document.createElement("img")).src = imagePath;
+    let stockPile = document.createElement("div");
+    stockPile.className = "card";
+    stockPile.appendChild(stockPileTopCard);
+    let stockPileAmount = document.createElement("p");
+    stockPileAmount.innerText = "Stock Pile";
+    let stockPileContainer = document.createElement("div");
+    stockPileContainer.className = "pile";
+    stockPileContainer.appendChild(stockPile);
+    stockPileContainer.appendChild(stockPileAmount);
 
     document.body.appendChild(drawPileContainer);
+    document.body.appendChild(stockPileContainer);
 
     socket.emit("LETS_PLAY", gameId);
 }

@@ -49,23 +49,88 @@ function mainMenu() {
 
 window.onload = function() {
 
-    socket = io("http://localhost:3000", { transports : ['websocket'] });
-    //socket = io("https://cards.oedel.me:3000", { transports : ['websocket'] });
+    document.body.innerHTML = "";
 
-    socket.on("connect", () => {
+        /* LOAD CSS FILE FOR THE CARD DECK */
 
-        console.log("Connected to the server.");
+    let stylesheetPath = "styles/decks/english_pattern.css";
+    let stylesheetAlreadyLoaded = false;
+    let stylesheetsList = document.head.getElementsByClassName("style-deck");
+    
+    for (let element of stylesheetsList) {
+        
+        if (element.getAttribute("href") === stylesheetPath) {
 
-        socket.emit("REQUEST_DATA");
-        socket.on("SEND_DATA", serverData => {
+            stylesheetAlreadyLoaded = true;
+        }
+    }
 
-            data = serverData;
-            mainMenu();
-        });
-    });
+    if (!stylesheetAlreadyLoaded) {
 
-    socket.on("disconnect", () => {
+        let stylesheet = document.createElement("link");
+        stylesheet.rel = "stylesheet";
+        stylesheet.className = "style-deck";
+        stylesheet.href = stylesheetPath;
 
-        console.log("Disconnected from the server.")
-    });
+        this.document.head.appendChild(stylesheet);
+    }
+
+    let imagePath = "img/decks/english_pattern.svg";
+
+    // draw pile
+    let drawPileTopCard = document.createElement("div");
+    drawPileTopCard.className = "clubs A"; // change to "hidden"
+    drawPileTopCard.appendChild(document.createElement("img")).src = imagePath;
+    let drawPile = document.createElement("div");
+    drawPile.className = "card";
+    drawPile.appendChild(drawPileTopCard);
+    let drawPileAmount = document.createElement("p");
+    drawPileAmount.innerText = "Draw Pile";
+    let drawPileContainer = document.createElement("div");
+    drawPileContainer.className = "pile";
+    drawPileContainer.appendChild(drawPile);
+    drawPileContainer.appendChild(drawPileAmount);
+
+    // own stock pile
+    let stockPileTopCard = document.createElement("div");
+    stockPileTopCard.className = "diamonds Q"; // change to "hidden"
+    stockPileTopCard.appendChild(document.createElement("img")).src = imagePath;
+    let stockPile = document.createElement("div");
+    stockPile.className = "card";
+    stockPile.appendChild(stockPileTopCard);
+    let stockPileAmount = document.createElement("p");
+    stockPileAmount.innerText = "Stock Pile";
+    let stockPileContainer = document.createElement("div");
+    stockPileContainer.className = "pile";
+    stockPileContainer.appendChild(stockPile);
+    stockPileContainer.appendChild(stockPileAmount);
+
+    // main grid
+    let mainLayout = document.createElement("div");
+    mainLayout.className = "main-layout";
+    mainLayout.style.display = "inline-grid";
+    mainLayout.appendChild(drawPileContainer);
+    mainLayout.appendChild(stockPileContainer);
+
+    document.body.appendChild(mainLayout);
+
+    // socket = io("http://localhost:3000", { transports : ['websocket'] });
+    // //socket = io("https://cards.oedel.me:3000", { transports : ['websocket'] });
+
+    // socket.on("connect", () => {
+
+    //     console.log("Connected to the server.");
+
+    //     socket.emit("REQUEST_DATA");
+    //     socket.on("SEND_DATA", serverData => {
+
+    //         data = serverData;
+    //         mainMenu();
+    //     });
+    // });
+
+    // socket.on("disconnect", () => {
+
+    //     console.log("Disconnected from the server.")
+    // });
 };
