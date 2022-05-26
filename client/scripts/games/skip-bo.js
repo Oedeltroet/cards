@@ -65,15 +65,21 @@ function init(socket, gameId) {
 
 function openLobby(socket, gameId, roomName) {
 
-    var lobbyCode = document.createElement("p");
+    let statusBar = document.createElement("p");
+    statusBar.id = "status";
+    statusBar.innerText = "Welcome to the lobby!";
+
+    let lobbyCode = document.createElement("p");
     lobbyCode.innerText = roomName;
 
-    var lobbyContainer = document.createElement("div");
-    lobbyContainer.id = "lobby";    
+    let lobbyContainer = document.createElement("div");
+    lobbyContainer.id = "lobby";
+    lobbyContainer.appendChild(statusBar);
     lobbyContainer.appendChild(lobbyCode);
 
     document.body.innerHTML = "";
     document.body.appendChild(lobbyContainer);
+    
 
     socket.on("BECOME_LEADER", () => {
 
@@ -87,10 +93,22 @@ function openLobby(socket, gameId, roomName) {
 
         lobbyContainer.appendChild(buttonStartGame);
 
-        socket.on("GAME_READY", () => {
+        socket.on("GAME_READY", (numPlayers) => {
 
-            console.log("The game is ready.")
+            statusBar.innerText = "The game is ready. (" + numPlayers + " players)";
             buttonStartGame.disabled = false;
+        });
+
+        socket.on("TOO_MANY_PLAYERS", (numPlayers) => {
+
+            statusBar.innerText = "Too many players! (" + numPlayers + ")";
+            buttonStartGame.disabled = true;
+        });
+
+        socket.on("NOT_ENOUGH_PLAYERS", (numPlayers) => {
+
+            statusBar.innerText = "Not enough players! (" + numPlayers + ")";
+            buttonStartGame.disabled = true;
         });
     });
 
@@ -147,6 +165,35 @@ function game(socket, gameId, players, deck, deckStyle) {
     drawPileContainer.appendChild(drawPile);
     drawPileContainer.appendChild(drawPileAmount);
 
+    // build piles
+    let buildLayout = document.createElement("div");
+    buildLayout.className = "build-layout";
+    buildLayout.style.display = "grid";
+    buildLayout.style.gridTemplateColumns = "repeat(auto-fit, minmax(min(100%/3, max(120px, 100%/5)), 1fr))";
+    buildLayout.style.justifyContent = "center";
+    buildLayout.style.alignItems = "center";
+
+    let buildPiles = Array(4);
+
+    for (let i = 0; i < 4; i++) {
+
+        let buildPileTopCard = document.createElement("div");
+        buildPileTopCard.className = "empty";
+        buildPileTopCard.appendChild(document.createElement("img")).src = imagePath;
+        let buildPile = document.createElement("div");
+        buildPile.className = "card";
+        buildPile.appendChild(buildPileTopCard);
+        let buildPileAmount = document.createElement("p");
+        buildPileAmount.innerText = "Build Pile " + (i + 1);
+
+        buildPiles[i] = document.createElement("div");
+        buildPiles[i].className = "pile";
+        buildPiles[i].appendChild(buildPile);
+        buildPiles[i].appendChild(buildPileAmount);
+
+        buildLayout.appendChild(buildPiles[i]);
+    }
+
     // own stock pile
     let stockPileTopCard = document.createElement("div");
     stockPileTopCard.className = "diamonds Q"; // change to "hidden"
@@ -155,14 +202,87 @@ function game(socket, gameId, players, deck, deckStyle) {
     stockPile.className = "card";
     stockPile.appendChild(stockPileTopCard);
     let stockPileAmount = document.createElement("p");
-    stockPileAmount.innerText = "Stock Pile";
+    stockPileAmount.innerText = "Stock Pile (30)";
     let stockPileContainer = document.createElement("div");
     stockPileContainer.className = "pile";
     stockPileContainer.appendChild(stockPile);
     stockPileContainer.appendChild(stockPileAmount);
 
-    document.body.appendChild(drawPileContainer);
-    document.body.appendChild(stockPileContainer);
+    // own discard piles
+    let discardLayout = document.createElement("div");
+    discardLayout.className = "discard-layout";
+    discardLayout.style.display = "grid";
+    discardLayout.style.gridTemplateColumns = "repeat(auto-fit, minmax(min(100%/3, max(120px, 100%/5)), 1fr))";
+    discardLayout.style.justifyContent = "center";
+    discardLayout.style.alignItems = "center";
+
+    let discardPiles = Array(4);
+
+    for (let i = 0; i < 4; i++) {
+
+        let discardPileTopCard = document.createElement("div");
+        discardPileTopCard.className = "empty";
+        discardPileTopCard.appendChild(document.createElement("img")).src = imagePath;
+        let discardPile = document.createElement("div");
+        discardPile.className = "card";
+        discardPile.appendChild(discardPileTopCard);
+        let discardPileAmount = document.createElement("p");
+        discardPileAmount.innerText = "Discard Pile " + (i + 1);
+
+        discardPiles[i] = document.createElement("div");
+        discardPiles[i].className = "pile";
+        discardPiles[i].appendChild(discardPile);
+        discardPiles[i].appendChild(discardPileAmount);
+
+        discardLayout.appendChild(discardPiles[i]);
+    }
+
+    // player hand
+
+    let handLayout = document.createElement("div");
+    handLayout.className = "discard-layout";
+    handLayout.style.display = "grid";
+    handLayout.style.gridTemplateColumns = "repeat(auto-fit, minmax(min(100%/3, max(120px, 100%/5)), 1fr))";
+    handLayout.style.justifyContent = "center";
+    handLayout.style.alignItems = "center";
+
+    let handCards = Array(5);
+
+    for (let i = 0; i < 5; i++) {
+
+        let playerHandTopCard = document.createElement("div");
+        playerHandTopCard.className = "empty";
+        playerHandTopCard.appendChild(document.createElement("img")).src = imagePath;
+        let playerHand = document.createElement("div");
+        playerHand.className = "card";
+        playerHand.appendChild(playerHandTopCard);
+
+        handCards[i] = document.createElement("div");
+        handCards[i].className = "pile";
+        handCards[i].appendChild(playerHand);
+
+        handLayout.appendChild(handCards[i]);
+    }
+
+        /* APPLY LAYOUT */
+
+    let playerLayout = document.createElement("div");
+    playerLayout.className = "player-layout";
+    playerLayout.style.display = "grid";
+    playerLayout.style.border = "2px solid white";
+    playerLayout.appendChild(stockPileContainer);
+    playerLayout.appendChild(discardLayout);
+    playerLayout.appendChild(handLayout);
+
+    let mainLayout = document.createElement("div");
+    mainLayout.className = "main-layout";
+    mainLayout.style.display = "grid";
+    mainLayout.style.padding = "10px";
+    mainLayout.appendChild(drawPileContainer);
+    mainLayout.appendChild(buildLayout);
+    mainLayout.appendChild(playerLayout);
+
+    document.body.appendChild(mainLayout);
 
     socket.emit("LETS_PLAY", gameId);
 }

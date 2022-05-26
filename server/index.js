@@ -92,6 +92,9 @@ io.on("connection", (socket) => {
 
   console.log("A user has connected.");
 
+  var currentRoomName = "";
+  var numPlayers = 0;
+
   socket.on("disconnect", () => {
 
     console.log("A user has disconnected.");
@@ -116,6 +119,10 @@ io.on("connection", (socket) => {
     }
 
     socket.join(roomName);
+
+    currentRoomName = roomName;
+    numPlayers = io.sockets.adapter.rooms.get(roomName).size;
+    
     socket.emit("GAME_CREATED", roomName);
     socket.emit("BECOME_LEADER");
 
@@ -126,14 +133,24 @@ io.on("connection", (socket) => {
 
     if (io. sockets. adapter. rooms. has(roomName)) {
 
+      currentRoomName = roomName;
+
       socket.join(roomName);
       socket.emit("JOIN_SUCCESSFUL", roomName);
       console.log("A user joined room " + roomName);
 
-      if (io.sockets.adapter.rooms.get(roomName).size >= 2) {
+      numPlayers = io.sockets.adapter.rooms.get(roomName).size;
 
-        console.log("The game is ready.");
-        io.to(roomName).emit("GAME_READY");
+      if (numPlayers >= 2 && numPlayers <= 6) {
+
+        console.log("The game is ready (" + numPlayers + " players)");
+        io.to(roomName).emit("GAME_READY", numPlayers);
+      }
+
+      else if (numPlayers > 6) {
+
+        console.log("Too many players!");
+        io.to(roomName).emit("TOO_MANY_PLAYERS", numPlayers);
       }
     }
 
@@ -142,6 +159,34 @@ io.on("connection", (socket) => {
       socket.emit("JOIN_FAILED_ROOM_NOT_FOUND", roomName);
     }
   });
+
+  socket.on("disconnect", () => {
+
+    if (io. sockets. adapter. rooms. has(currentRoomName)) {
+
+      numPlayers = io.sockets.adapter.rooms.get(currentRoomName).size;
+
+      if (numPlayers >= 2 && numPlayers <= 6) {
+
+        console.log("The game is ready (" + numPlayers + " players)");
+        io.to(currentRoomName).emit("GAME_READY", numPlayers);
+      }
+
+      else if (numPlayers > 6) {
+
+        console.log("Too many players!");
+        io.to(currentRoomName).emit("TOO_MANY_PLAYERS", numPlayers);
+      }
+
+      else if (numPlayers < 2) {
+
+        console.log("Not enough players!");
+        io.to(currentRoomName).emit("NOT_ENOUGH_PLAYERS", numPlayers);
+      }
+    }
+  });
+
+  let games = new Map();
 
   socket.on("START_GAME", (gameId, roomName) => {
 
@@ -154,8 +199,10 @@ io.on("connection", (socket) => {
 
         /* SKIP-BO */
 
-        var SkipBo = require("./scripts/games/" + data.games[gameId].script);
-        var game = new SkipBo.Gamestate(numPlayers, playWithPokerDecks);
+        let SkipBo = require("./scripts/games/" + data.games[gameId].script);
+        
+        games.set(roomName, new SkipBo.Gamestate(numPlayers, playWithPokerDecks));
+        let game = games.get(roomName);
 
         console.log(game);
 
@@ -167,7 +214,7 @@ io.on("connection", (socket) => {
     io.to(roomName).emit("GAME_STARTED", numPlayers, playWithPokerDecks ? data.decks[0] : data.decks[1], 0);
   });
 
-  socket.on("LETS_PLAY", (gameId) => {
+  socket.on("LETS_PLAY", (gameId, roomName) => {
 
     switch (gameId) {
 
@@ -175,8 +222,8 @@ io.on("connection", (socket) => {
 
         /* SKIP-BO */
 
-        var SkipBo = require("./scripts/games/" + data.games[gameId].script);
-
+        let SkipBo = require("./scripts/games/" + data.games[gameId].script);
+        let game = games.get(roomName);
         break;
 
       default: break;

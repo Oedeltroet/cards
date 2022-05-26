@@ -6,6 +6,18 @@
     left: -1.87rem;
 }
 
+.empty {
+
+    background-color: rgb(0, 150, 80);
+    border-radius: 36px;
+}
+
+.empty img {
+
+    opacity: 0%;
+    
+}
+
 
 
     /* SUITS */
