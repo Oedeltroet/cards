@@ -30,7 +30,7 @@ class Deck {
         }
     }
 
-    get numberOfCards() {
+    get size() {
 
         return this.cards.length;
     }
@@ -42,7 +42,7 @@ class Deck {
 
     shuffle() {
 
-        for (let i = this.numberOfCards - 1; i > 0; i--) {
+        for (let i = this.size - 1; i > 0; i--) {
 
             const newIndex = Math.floor(Math.random() * (i + 1));
             const oldValue = this.cards[newIndex];
@@ -68,7 +68,7 @@ class Deck {
             return this.cards.pop();
         }
 
-        if (numCards <= this.numberOfCards) {
+        if (numCards <= this.size) {
 
             let pile = new Deck();
 

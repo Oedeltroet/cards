@@ -49,7 +49,7 @@ const data = {
   ]
 };
 
-var debug = true;
+var debug = false;
 var server, io;
 var games;
 
@@ -214,15 +214,14 @@ io.on("connection", (socket) => {
 
           io.to(players).emit("ASSIGN_PLAYER_ID", i);
 
-          let topCard = game.playerCards[i][0].topCard;
-          io.to(roomName).emit("STOCK_PILE_TOP_CARD", i, topCard.suit, topCard.value);
+          let stockPile = game.playerCards[i][0];
+          io.to(roomName).emit("UPDATE_STOCK_PILE", i, stockPile.size, stockPile.topCard.suit, stockPile.topCard.value);
         }
 
         break;
 
       default: break;
     }
-    
   });
 
   socket.on("LETS_PLAY", (gameId, roomName) => {
