@@ -121,6 +121,8 @@ function openLobby(socket, gameId, roomName) {
 
 function game(socket, gameId, players, deck, deckStyle) {
 
+    let playerId = 0;
+
     document.body.innerHTML = "";
 
         /* LOAD CSS FILE FOR THE CARD DECK */
@@ -285,4 +287,18 @@ function game(socket, gameId, players, deck, deckStyle) {
     document.body.appendChild(mainLayout);
 
     socket.emit("LETS_PLAY", gameId);
+
+    socket.on("ASSIGN_PLAYER_ID", (id) => {
+
+        playerId = id;
+        console.log("You are player " + playerId);
+    });
+
+    socket.on("STOCK_PILE_TOP_CARD", (player, suit, value) => {
+
+        if (player == playerId) {
+
+            stockPileTopCard.className = (deck.name == "Poker" ? deck.suits[suit] + " " : "") + deck.values[value];
+        }
+    });
 }

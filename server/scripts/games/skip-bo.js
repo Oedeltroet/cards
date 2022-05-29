@@ -4,6 +4,7 @@ const numJokers = 18;
 const numValues = 12;
 const numSequences = 12;
 const numBuildPiles = 4;
+const numHandCards = 5;
 
 class Gamestate {
 
@@ -42,32 +43,43 @@ class Gamestate {
             }
         }
 
-        console.log(this.drawPile);
-
         // Now there is either a 156 cards poker style deck or a 162 cards Skip-Bo deck.
         // Time to shuffle!
         this.drawPile.shuffle();
 
+        // Create an array for the build piles
+        this.buildPiles = new Array(numBuildPiles);
+
+        // Initialize each build pile with an empty deck
+        this.buildPiles.forEach(element => {
+
+            element = new Deck();
+        });
+
         // The amount of cards on a stock pile depends on the number of players.
         let stockPileSize = (numPlayers <= 4) ? 30 : 20;
 
-        // Create an array that will hold both the stockpile and the discard piles for each player.
+        // Create an array that will hold the stock pile, hand cards and discard piles for each player.
         this.playerCards = [];
 
         // Now the origin pile will be split up.
         for (let i = 0; i < numPlayers; i++) {
 
+            let currentPlayer = [];
+
             // Each player gets a stock pile that has to be reduced.
-            this.playerCards.push(this.drawPile.draw(stockPileSize));
+            currentPlayer.push(this.drawPile.draw(stockPileSize));
 
             // Creating an empty hand for each player
-            this.playerCards.push(new Deck());
+            currentPlayer.push(new Array(numHandCards));
 
             // Four empty discard piles are also created.
             for (let j = 0; j < numBuildPiles; j++) {
                 
-                this.playerCards.push(new Deck());
+                currentPlayer.push(new Deck());
             }
+
+            this.playerCards.push(currentPlayer);
         }
 
         // The game is set up and ready to play.

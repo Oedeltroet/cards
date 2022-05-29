@@ -8,6 +8,11 @@ class Card {
         this.suit = suit;
         this.value = value;
     }
+
+    get data() {
+
+        return [this.suit, this.value];
+    }
 }
 
 class Deck {
@@ -28,6 +33,11 @@ class Deck {
     get numberOfCards() {
 
         return this.cards.length;
+    }
+
+    get topCard() {
+
+        return this.cards[this.cards.length - 1];
     }
 
     shuffle() {

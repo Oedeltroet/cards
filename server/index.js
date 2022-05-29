@@ -102,7 +102,6 @@ io.on("connection", (socket) => {
 
   socket.on("REQUEST_DATA", () => {
 
-    console.log("Sending data.");
     socket.emit("SEND_DATA", data);
   });
   
@@ -131,7 +130,7 @@ io.on("connection", (socket) => {
 
   socket.on("JOIN_GAME", (roomName) => {
 
-    if (io. sockets. adapter. rooms. has(roomName)) {
+    if (io.sockets.adapter.rooms.has(roomName)) {
 
       currentRoomName = roomName;
 
@@ -190,8 +189,11 @@ io.on("connection", (socket) => {
 
   socket.on("START_GAME", (gameId, roomName) => {
 
-    let numPlayers = io.sockets.adapter.rooms.get(roomName).size;
+    let players = io.sockets.adapter.rooms.get(roomName);
+    let numPlayers = players.size;
     let playWithPokerDecks = true;
+    let game;
+    let gameLogic;
 
     switch (gameId) {
 
@@ -199,19 +201,28 @@ io.on("connection", (socket) => {
 
         /* SKIP-BO */
 
-        let SkipBo = require("./scripts/games/" + data.games[gameId].script);
+        gameLogic = require("./scripts/games/" + data.games[gameId].script);
         
-        games.set(roomName, new SkipBo.Gamestate(numPlayers, playWithPokerDecks));
-        let game = games.get(roomName);
+        games.set(roomName, new gameLogic.Gamestate(numPlayers, playWithPokerDecks));
 
+        game = games.get(roomName);
         console.log(game);
+
+        io.to(roomName).emit("GAME_STARTED", numPlayers, playWithPokerDecks ? data.decks[0] : data.decks[1], 0);
+
+        for (let i = 0; i < numPlayers; i++) {
+
+          io.to(players).emit("ASSIGN_PLAYER_ID", i);
+
+          let topCard = game.playerCards[i][0].topCard;
+          io.to(roomName).emit("STOCK_PILE_TOP_CARD", i, topCard.suit, topCard.value);
+        }
 
         break;
 
       default: break;
     }
-
-    io.to(roomName).emit("GAME_STARTED", numPlayers, playWithPokerDecks ? data.decks[0] : data.decks[1], 0);
+    
   });
 
   socket.on("LETS_PLAY", (gameId, roomName) => {
@@ -222,8 +233,10 @@ io.on("connection", (socket) => {
 
         /* SKIP-BO */
 
-        let SkipBo = require("./scripts/games/" + data.games[gameId].script);
         let game = games.get(roomName);
+
+
+
         break;
 
       default: break;
