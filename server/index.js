@@ -49,9 +49,8 @@ const data = {
   ]
 };
 
-var debug = false;
+var debug = true;
 var server, io;
-var games;
 
 if (debug) {
 
@@ -87,13 +86,16 @@ else {
 }
 
 const rooms = io.of("/").adapter.rooms;
+let games = new Map();
+let players;
+let numPlayers;
 
 io.on("connection", (socket) => {
 
   console.log("A user has connected.");
 
-  var currentRoomName = "";
-  var numPlayers = 0;
+  let currentRoomName = "";
+  numPlayers = 0;
 
   socket.on("disconnect", () => {
 
@@ -161,7 +163,7 @@ io.on("connection", (socket) => {
 
   socket.on("disconnect", () => {
 
-    if (io. sockets. adapter. rooms. has(currentRoomName)) {
+    if (io.sockets.adapter.rooms.has(currentRoomName)) {
 
       numPlayers = io.sockets.adapter.rooms.get(currentRoomName).size;
 
@@ -185,15 +187,15 @@ io.on("connection", (socket) => {
     }
   });
 
-  let games = new Map();
+  let game;
 
   socket.on("START_GAME", (gameId, roomName) => {
 
-    let players = io.sockets.adapter.rooms.get(roomName);
-    let numPlayers = players.size;
-    let playWithPokerDecks = true;
-    let game;
     let gameLogic;
+    let playWithPokerDecks = true;
+    
+    players = io.sockets.adapter.rooms.get(currentRoomName);
+    numPlayers = players.size;
 
     switch (gameId) {
 
@@ -202,21 +204,11 @@ io.on("connection", (socket) => {
         /* SKIP-BO */
 
         gameLogic = require("./scripts/games/" + data.games[gameId].script);
-        
         games.set(roomName, new gameLogic.Gamestate(numPlayers, playWithPokerDecks));
-
         game = games.get(roomName);
         console.log(game);
 
         io.to(roomName).emit("GAME_STARTED", numPlayers, playWithPokerDecks ? data.decks[0] : data.decks[1], 0);
-
-        for (let i = 0; i < numPlayers; i++) {
-
-          io.to(players).emit("ASSIGN_PLAYER_ID", i);
-
-          let stockPile = game.playerCards[i][0];
-          io.to(roomName).emit("UPDATE_STOCK_PILE", i, stockPile.size, stockPile.topCard.suit, stockPile.topCard.value);
-        }
 
         break;
 
@@ -226,15 +218,34 @@ io.on("connection", (socket) => {
 
   socket.on("LETS_PLAY", (gameId, roomName) => {
 
+    let playerId = 0;
+
+    console.log(socket.id);
+
+    for (let i = 0; i < players.size; i++) {
+
+      console.log([...players][i]);
+
+      if ([...players][i] === socket.id) {
+
+        playerId = i;
+        break;
+      }
+    }
+
+    socket.emit("ASSIGN_PLAYER_ID", playerId);
+
     switch (gameId) {
 
       case 0:
 
         /* SKIP-BO */
 
-        let game = games.get(roomName);
+        game = games.get(roomName);
 
-
+        let stockPile = game.playerCards[playerId][0];
+        console.log("Stock pile for player " + playerId + ", top card is " + data.decks[0].values[stockPile.topCard.value] + " of " + data.decks[0].suits[stockPile.topCard.suit]);
+        io.to(roomName).emit("UPDATE_STOCK_PILE", playerId, stockPile.size, stockPile.topCard.suit, stockPile.topCard.value);
 
         break;
 

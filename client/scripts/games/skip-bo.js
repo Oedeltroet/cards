@@ -115,11 +115,11 @@ function openLobby(socket, gameId, roomName) {
     socket.on("GAME_STARTED", (players, deck, deckStyle) => {
 
         console.log("The game has started.")
-        game(socket, gameId, players, deck, deckStyle);
+        game(socket, gameId, roomName, players, deck, deckStyle);
     });
 }
 
-function game(socket, gameId, players, deck, deckStyle) {
+function game(socket, gameId, roomName, players, deck, deckStyle) {
 
     let myId = 0;
 
@@ -204,7 +204,7 @@ function game(socket, gameId, players, deck, deckStyle) {
     stockPile.className = "card";
     stockPile.appendChild(stockPileTopCard);
     let stockPileAmount = document.createElement("p");
-    stockPileAmount.innerText = "Stock Pile (30)";
+    stockPileAmount.innerText = "Stock Pile";
     let stockPileContainer = document.createElement("div");
     stockPileContainer.className = "pile";
     stockPileContainer.appendChild(stockPile);
@@ -286,7 +286,7 @@ function game(socket, gameId, players, deck, deckStyle) {
 
     document.body.appendChild(mainLayout);
 
-    socket.emit("LETS_PLAY", gameId);
+    socket.emit("LETS_PLAY", gameId, roomName);
 
     socket.on("ASSIGN_PLAYER_ID", (id) => {
 
