@@ -1,0 +1,138 @@
+.card {
+
+    border: 2px solid transparent;
+
+    max-width: 173px;
+    max-height: 249px;
+    overflow: hidden;
+}
+
+.card:hover {
+
+    border-radius: 10px;
+    border: 2px solid yellow;
+}
+
+.card div {
+
+    position: relative;
+}
+
+.pile {
+
+    margin: 10px;
+}
+
+.pile p {
+    
+    margin-top: 5px;
+    max-width: 173px;
+}
+
+.empty {
+
+    background-color: rgb(0, 150, 80);
+    border-radius: 10px;
+    min-width: 173px;
+    min-height: 249px;
+}
+
+.empty img {
+
+    opacity: 0%;
+}
+
+.hidden {
+
+    top: -980px;
+    left: -338px;
+}
+
+.joker {
+
+    top: -980px;
+}
+
+
+
+    /* SUITS */
+
+.diamonds {
+
+    top: -245px;
+}
+
+.hearts {
+
+    top: -490px;
+}
+
+.spades {
+
+    top: -735px;
+}
+
+
+
+    /* VALUES */
+
+.\32 {
+
+    left: -169px;
+}
+
+.\33 {
+
+    left: -338px;
+}
+
+.\34 {
+
+    left: -507px;
+}
+
+.\35 {
+
+    left: -676px;
+}
+
+.\36 {
+
+    left: -845px;
+}
+
+.\37 {
+
+    left: -1014px;
+}
+
+.\38 {
+
+    left: -1183px;
+}
+
+.\39 {
+
+    left: -1352px;
+}
+
+.\31 0 {
+
+    left: -1521px;
+}
+
+.J {
+
+    left: -1690px;
+}
+
+.Q {
+
+    left: -1859px;
+}
+
+.K {
+
+    position: relative;
+    left: -2028rem;
+}

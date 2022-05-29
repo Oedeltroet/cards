@@ -151,12 +151,12 @@ function game(socket, gameId, roomName, players, deck, deckStyle) {
 
         /* CREATE THE PILES */
 
-    let imagePath = "img/decks/" + deck.styles[deckStyle].image;
+    let imagePathDeck = "img/decks/" + deck.styles[deckStyle].image;
 
     // draw pile
     let drawPileTopCard = document.createElement("div");
-    drawPileTopCard.className = "spades 7"; // change to "hidden"
-    drawPileTopCard.appendChild(document.createElement("img")).src = imagePath;
+    drawPileTopCard.className = "hidden";
+    drawPileTopCard.appendChild(document.createElement("img")).src = imagePathDeck;
     let drawPile = document.createElement("div");
     drawPile.className = "card";
     drawPile.appendChild(drawPileTopCard);
@@ -181,7 +181,7 @@ function game(socket, gameId, roomName, players, deck, deckStyle) {
 
         let buildPileTopCard = document.createElement("div");
         buildPileTopCard.className = "empty";
-        buildPileTopCard.appendChild(document.createElement("img")).src = imagePath;
+        buildPileTopCard.appendChild(document.createElement("img")).src = imagePathDeck;
         let buildPile = document.createElement("div");
         buildPile.className = "card";
         buildPile.appendChild(buildPileTopCard);
@@ -198,8 +198,8 @@ function game(socket, gameId, roomName, players, deck, deckStyle) {
 
     // own stock pile
     let stockPileTopCard = document.createElement("div");
-    stockPileTopCard.className = "diamonds Q"; // change to "hidden"
-    stockPileTopCard.appendChild(document.createElement("img")).src = imagePath;
+    stockPileTopCard.className = "empty";
+    stockPileTopCard.appendChild(document.createElement("img")).src = imagePathDeck;
     let stockPile = document.createElement("div");
     stockPile.className = "card";
     stockPile.appendChild(stockPileTopCard);
@@ -224,7 +224,7 @@ function game(socket, gameId, roomName, players, deck, deckStyle) {
 
         let discardPileTopCard = document.createElement("div");
         discardPileTopCard.className = "empty";
-        discardPileTopCard.appendChild(document.createElement("img")).src = imagePath;
+        discardPileTopCard.appendChild(document.createElement("img")).src = imagePathDeck;
         let discardPile = document.createElement("div");
         discardPile.className = "card";
         discardPile.appendChild(discardPileTopCard);
@@ -254,7 +254,7 @@ function game(socket, gameId, roomName, players, deck, deckStyle) {
 
         let playerHandTopCard = document.createElement("div");
         playerHandTopCard.className = "empty";
-        playerHandTopCard.appendChild(document.createElement("img")).src = imagePath;
+        playerHandTopCard.appendChild(document.createElement("img")).src = imagePathDeck;
         let playerHand = document.createElement("div");
         playerHand.className = "card";
         playerHand.appendChild(playerHandTopCard);

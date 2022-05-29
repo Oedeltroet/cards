@@ -1,3 +1,34 @@
+.card {
+
+    border: 5px solid transparent;
+
+    max-width: 371px;
+    max-height: 551px;
+    overflow: hidden;
+
+    --scale: 0.5;
+
+    transform: scale(var(--scale));
+    transform-origin: top left;
+    margin-bottom: calc((var(--scale) - 1) * 32rem);
+}
+
+.card:hover {
+
+    border-radius: 36px;
+    border: 5px solid yellow;
+}
+
+.pile {
+
+    margin: 10px;
+}
+
+.pile p {
+
+    max-width: 200px;
+}
+
 .card img {
     
     /* position of the top left card */
@@ -12,7 +43,13 @@
     border-radius: 36px;
 }
 
-.empty img {
+.hidden {
+
+    background-color: white;
+    border-radius: 36px;
+}
+
+.empty img, .hidden img {
 
     opacity: 0%;
     

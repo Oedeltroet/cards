@@ -23,8 +23,16 @@ const data = {
         
         {
           "name" : "English Pattern",
+          "author" : "Dmitry Fomin",
           "image" : "english_pattern.svg",
           "stylesheet" : "english_pattern.css"
+        },
+
+        {
+          "name" : "SVG Cards",
+          "author" : "David Bellot",
+          "image" : "svg-cards.svg",
+          "stylesheet" : "svg-cards.css"
         }
       ],
       "suits" : [
@@ -46,7 +54,7 @@ const data = {
         "J", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12"
       ]
     }
-  ]
+  ],
 };
 
 var debug = true;
@@ -208,7 +216,7 @@ io.on("connection", (socket) => {
         game = games.get(roomName);
         console.log(game);
 
-        io.to(roomName).emit("GAME_STARTED", numPlayers, playWithPokerDecks ? data.decks[0] : data.decks[1], 0);
+        io.to(roomName).emit("GAME_STARTED", numPlayers, playWithPokerDecks ? data.decks[0] : data.decks[1], 1);
 
         break;
 
