@@ -402,6 +402,14 @@ function game(socket, playerId, gameId, roomName, players, deck, deckStyle) {
         }
     });
 
+    socket.on("DRAW", (length, hand) => {
+
+        for (let i = 0; i < length; i++) {
+
+            handCards[i].childNodes[0].childNodes[0].className = deck.suits[hand[i][0]] + " " + deck.values[hand[i][1]];
+        }
+    });
+
     socket.on("UPDATE_STOCK_PILE", (player, size, suit, value) => {
 
         let updatedStockPile = document.getElementById("stock-pile-" + player);

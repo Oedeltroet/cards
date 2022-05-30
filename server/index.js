@@ -248,7 +248,8 @@ io.on("connection", (socket) => {
 
         /* SKIP-BO */
 
-        game = games.get(roomName);
+        do { game = games.get(roomName); }
+        while (!game);
 
         let stockPile = game.playerCards[playerId][0];
         console.log("Player " + playerId + ": stock pile top card is " + data.decks[0].values[stockPile.topCard.value] + " of " + data.decks[0].suits[stockPile.topCard.suit]);
@@ -263,17 +264,16 @@ io.on("connection", (socket) => {
             game.drawHand(playerId);
 
             let handCards = game.playerCards[playerId][1];
-            console.log("Player " + playerId + ": new hand is " + handCards);
+            console.log("Player " + playerId + ": new hand (length " + handCards.length + ") is " + handCards);
 
             let arr = [];
 
-            for (let i = 0; i < handCards.size; i++) {
+            for (let i = 0; i < handCards.length; i++) {
 
-              arr.push(handCards[i].suit);
-              arr.push(handCards[i].value);
+              arr.push(handCards[i].data);
             }
 
-            socket.emit("DRAW", handCards.size, arr);
+            socket.emit("DRAW", handCards.length, arr);
           }
         });
 
