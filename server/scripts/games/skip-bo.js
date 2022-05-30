@@ -9,6 +9,9 @@ const numHandCards = 5;
 class Gamestate {
 
     constructor(numPlayers, playWithPokerDecks = false) {
+
+        this.numPlayers = numPlayers;
+        this.playerTurn = 0;
         
         // You can play with three poker decks instead of one Skip-Bo deck.
         // This will generate a 3 x 52 = 156 cards deck with four suits (that don't matter).
@@ -60,18 +63,18 @@ class Gamestate {
         let stockPileSize = (numPlayers <= 4) ? 30 : 20;
 
         // Create an array that will hold the stock pile, hand cards and discard piles for each player.
-        this.playerCards = [];
+        this.playerCards = new Array();
 
         // Now the origin pile will be split up.
         for (let i = 0; i < numPlayers; i++) {
 
-            let currentPlayer = [];
+            let currentPlayer = new Array();
 
             // Each player gets a stock pile that has to be reduced.
             currentPlayer.push(this.drawPile.draw(stockPileSize));
 
             // Creating an empty hand for each player
-            currentPlayer.push(new Array(numHandCards));
+            currentPlayer.push(new Array(0));
 
             // Four empty discard piles are also created.
             for (let j = 0; j < numBuildPiles; j++) {
@@ -83,6 +86,24 @@ class Gamestate {
         }
 
         // The game is set up and ready to play.
+    }
+
+    nextTurn() {
+
+        this.playerTurn = (this.playerTurn + 1) % this.numPlayers;
+    };
+
+    drawHand(playerId) {
+
+        let hand = this.playerCards[playerId][1];
+        let cardsToDraw = numHandCards - hand.length;
+
+        for (let i = 0; i < cardsToDraw; i++) {
+
+            hand.push(this.drawPile.draw());
+        }
+
+        console.log(hand);
     }
 }
 

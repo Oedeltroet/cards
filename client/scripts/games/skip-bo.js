@@ -112,18 +112,39 @@ function openLobby(socket, gameId, roomName) {
         });
     });
 
+    let myId = 0;
+
+    socket.on("ASSIGN_PLAYER_ID", (id) => {
+
+        myId = id;
+        console.log("You are player " + myId);
+    });
+
     socket.on("GAME_STARTED", (players, deck, deckStyle) => {
 
         console.log("The game has started.")
-        game(socket, gameId, roomName, players, deck, deckStyle);
+        game(socket, myId, gameId, roomName, players, deck, deckStyle);
     });
 }
 
-function game(socket, gameId, roomName, players, deck, deckStyle) {
-
-    let myId = 0;
+function game(socket, playerId, gameId, roomName, players, deck, deckStyle) {
 
     document.body.innerHTML = "";
+
+        /* CREATE STATUS BAR */
+
+    let statusText = document.createElement("p");
+    statusText.innerText = "Test.";
+    statusText.style.textAlign = "center";
+
+    let statusBar = document.createElement("div");
+    statusBar.style.position = "fixed";
+    statusBar.style.top = 0;
+    statusBar.style.width = "100%";
+    statusBar.style.padding = "5px";
+    statusBar.style.backgroundColor = "rgb(0, 120, 60)";
+    statusBar.style.zIndex = 2;
+    statusBar.appendChild(statusText);
 
         /* LOAD CSS FILE FOR THE CARD DECK */
 
@@ -153,6 +174,76 @@ function game(socket, gameId, roomName, players, deck, deckStyle) {
 
     let imagePathDeck = "img/decks/" + deck.styles[deckStyle].image;
 
+    // other players
+    let otherPlayersLayout = document.createElement("div");
+    otherPlayersLayout.className = "other-players-layout";
+    otherPlayersLayout.style.display = "grid";
+    otherPlayersLayout.style.gridTemplateColumns = "repeat(auto-fit, minmax(min(100%/3, max(120px, 100%/5)), 1fr))";
+    otherPlayersLayout.style.justifyContent = "center";
+    otherPlayersLayout.style.alignItems = "center";
+
+    for (let i = 0; i < players; i++) {
+
+        if (i == playerId) {
+
+            continue;
+        }
+
+        // stock pile
+        let stockPileTopCard = document.createElement("div");
+        stockPileTopCard.className = "empty";
+        stockPileTopCard.appendChild(document.createElement("img")).src = imagePathDeck;
+        let stockPile = document.createElement("div");
+        stockPile.className = "card";
+        stockPile.appendChild(stockPileTopCard);
+        let stockPileAmount = document.createElement("p");
+        stockPileAmount.innerText = "Stock Pile";
+        let stockPileContainer = document.createElement("div");
+        stockPileContainer.id = "stock-pile-" + i;
+        stockPileContainer.className = "pile";
+        stockPileContainer.appendChild(stockPile);
+        stockPileContainer.appendChild(stockPileAmount);
+
+        let discardLayout = document.createElement("div");
+        discardLayout.className = "discard-layout";
+        discardLayout.style.display = "grid";
+        discardLayout.style.gridTemplateColumns = "repeat(auto-fit, minmax(min(100%/3, max(120px, 100%/5)), 1fr))";
+        discardLayout.style.justifyContent = "center";
+        discardLayout.style.alignItems = "center";
+
+        let discardPiles = Array(4);
+
+        for (let j = 0; j < 4; j++) {
+
+            let discardPileTopCard = document.createElement("div");
+            discardPileTopCard.className = "empty";
+            discardPileTopCard.appendChild(document.createElement("img")).src = imagePathDeck;
+            let discardPile = document.createElement("div");
+            discardPile.className = "card";
+            discardPile.appendChild(discardPileTopCard);
+            let discardPileAmount = document.createElement("p");
+            discardPileAmount.innerText = "Discard Pile " + (j + 1);
+
+            discardPiles[j] = document.createElement("div");
+            discardPiles[j].id = "discard-pile-" + i + "-" + j;
+            discardPiles[j].className = "pile";
+            discardPiles[j].appendChild(discardPile);
+            discardPiles[j].appendChild(discardPileAmount);
+
+            discardLayout.appendChild(discardPiles[j]);
+        }
+
+        // layout
+        let playerLayout = document.createElement("div");
+        playerLayout.className = "player-layout";
+        playerLayout.style.display = "grid";
+        playerLayout.style.border = "2px solid white";
+        playerLayout.appendChild(stockPileContainer);
+        playerLayout.appendChild(discardLayout);
+
+        otherPlayersLayout.appendChild(playerLayout);
+    }
+
     // draw pile
     let drawPileTopCard = document.createElement("div");
     drawPileTopCard.className = "hidden";
@@ -163,6 +254,7 @@ function game(socket, gameId, roomName, players, deck, deckStyle) {
     let drawPileAmount = document.createElement("p");
     drawPileAmount.innerText = "Draw Pile";
     let drawPileContainer = document.createElement("div");
+    drawPileContainer.id = "draw-pile";
     drawPileContainer.className = "pile";
     drawPileContainer.appendChild(drawPile);
     drawPileContainer.appendChild(drawPileAmount);
@@ -189,6 +281,7 @@ function game(socket, gameId, roomName, players, deck, deckStyle) {
         buildPileAmount.innerText = "Build Pile " + (i + 1);
 
         buildPiles[i] = document.createElement("div");
+        buildPiles[i].id = "build-pile-" + i;
         buildPiles[i].className = "pile";
         buildPiles[i].appendChild(buildPile);
         buildPiles[i].appendChild(buildPileAmount);
@@ -206,6 +299,7 @@ function game(socket, gameId, roomName, players, deck, deckStyle) {
     let stockPileAmount = document.createElement("p");
     stockPileAmount.innerText = "Stock Pile";
     let stockPileContainer = document.createElement("div");
+    stockPileContainer.id = "stock-pile-" + playerId;
     stockPileContainer.className = "pile";
     stockPileContainer.appendChild(stockPile);
     stockPileContainer.appendChild(stockPileAmount);
@@ -232,6 +326,7 @@ function game(socket, gameId, roomName, players, deck, deckStyle) {
         discardPileAmount.innerText = "Discard Pile " + (i + 1);
 
         discardPiles[i] = document.createElement("div");
+        discardPiles[i].id = "discard-pile-" + playerId + "-" + i;
         discardPiles[i].className = "pile";
         discardPiles[i].appendChild(discardPile);
         discardPiles[i].appendChild(discardPileAmount);
@@ -242,7 +337,7 @@ function game(socket, gameId, roomName, players, deck, deckStyle) {
     // player hand
 
     let handLayout = document.createElement("div");
-    handLayout.className = "discard-layout";
+    handLayout.className = "hand-layout";
     handLayout.style.display = "grid";
     handLayout.style.gridTemplateColumns = "repeat(auto-fit, minmax(min(100%/3, max(120px, 100%/5)), 1fr))";
     handLayout.style.justifyContent = "center";
@@ -280,26 +375,37 @@ function game(socket, gameId, roomName, players, deck, deckStyle) {
     mainLayout.className = "main-layout";
     mainLayout.style.display = "grid";
     mainLayout.style.padding = "10px";
+    mainLayout.appendChild(otherPlayersLayout);
     mainLayout.appendChild(drawPileContainer);
     mainLayout.appendChild(buildLayout);
     mainLayout.appendChild(playerLayout);
 
+    document.body.appendChild(statusBar);
     document.body.appendChild(mainLayout);
 
-    socket.emit("LETS_PLAY", gameId, roomName);
+    socket.emit("LETS_PLAY", playerId, gameId, roomName);
 
-    socket.on("ASSIGN_PLAYER_ID", (id) => {
+    socket.on("TURN", (player) => {
 
-        myId = id;
-        console.log("You are player " + myId);
+        if (player == playerId) {
+
+            statusBar.style.backgroundColor = "red";
+            statusText.innerText = "It's your turn!";
+
+            socket.emit("REQUEST_DRAW");
+        }
+
+        else {
+
+            statusBar.style.backgroundColor = "rgb(0, 120, 60)";
+            statusText.innerText = "Player " + player + " is playing.";
+        }
     });
 
     socket.on("UPDATE_STOCK_PILE", (player, size, suit, value) => {
 
-        if (player == myId) {
-
-            stockPileAmount.innerText = size;
-            stockPileTopCard.className = (deck.name == "Poker" ? deck.suits[suit] + " " : "") + deck.values[value];
-        }
+        let updatedStockPile = document.getElementById("stock-pile-" + player);
+        updatedStockPile.childNodes[0].childNodes[0].className = (deck.name == "Poker" ? deck.suits[suit] + " " : "") + deck.values[value];
+        updatedStockPile.childNodes[1].innerText = size;
     });
 }

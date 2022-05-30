@@ -205,6 +205,19 @@ io.on("connection", (socket) => {
     players = io.sockets.adapter.rooms.get(currentRoomName);
     numPlayers = players.size;
 
+    for (let i = 0; i < numPlayers; i++) {
+
+      if ([...players][i] == socket.id) {
+
+        socket.emit("ASSIGN_PLAYER_ID", i);
+      }
+
+      else {
+
+        socket.to([...players][i]).emit("ASSIGN_PLAYER_ID", i);
+      }
+    }
+
     switch (gameId) {
 
       case 0:
@@ -217,6 +230,7 @@ io.on("connection", (socket) => {
         console.log(game);
 
         io.to(roomName).emit("GAME_STARTED", numPlayers, playWithPokerDecks ? data.decks[0] : data.decks[1], 1);
+        io.to(roomName).emit("TURN", game.playerTurn);
 
         break;
 
@@ -224,24 +238,9 @@ io.on("connection", (socket) => {
     }
   });
 
-  socket.on("LETS_PLAY", (gameId, roomName) => {
+  socket.on("LETS_PLAY", (playerId, gameId, roomName) => {
 
-    let playerId = 0;
-
-    console.log(socket.id);
-
-    for (let i = 0; i < players.size; i++) {
-
-      console.log([...players][i]);
-
-      if ([...players][i] === socket.id) {
-
-        playerId = i;
-        break;
-      }
-    }
-
-    socket.emit("ASSIGN_PLAYER_ID", playerId);
+    console.log("Player " + playerId + " is ready to play.");
 
     switch (gameId) {
 
@@ -252,8 +251,31 @@ io.on("connection", (socket) => {
         game = games.get(roomName);
 
         let stockPile = game.playerCards[playerId][0];
-        console.log("Stock pile for player " + playerId + ", top card is " + data.decks[0].values[stockPile.topCard.value] + " of " + data.decks[0].suits[stockPile.topCard.suit]);
+        console.log("Player " + playerId + ": stock pile top card is " + data.decks[0].values[stockPile.topCard.value] + " of " + data.decks[0].suits[stockPile.topCard.suit]);
         io.to(roomName).emit("UPDATE_STOCK_PILE", playerId, stockPile.size, stockPile.topCard.suit, stockPile.topCard.value);
+
+        socket.on("REQUEST_DRAW", () => {
+
+          console.log("Player " + playerId + " wants to draw.");
+
+          if (game.playerTurn == playerId) {
+
+            game.drawHand(playerId);
+
+            let handCards = game.playerCards[playerId][1];
+            console.log("Player " + playerId + ": new hand is " + handCards);
+
+            let arr = [];
+
+            for (let i = 0; i < handCards.size; i++) {
+
+              arr.push(handCards[i].suit);
+              arr.push(handCards[i].value);
+            }
+
+            socket.emit("DRAW", handCards.size, arr);
+          }
+        });
 
         break;
 
