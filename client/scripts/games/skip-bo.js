@@ -293,7 +293,48 @@ function game(socket, playerId, gameId, roomName, players, deck, deckStyle) {
         buildPiles[i].appendChild(buildPile);
         buildPiles[i].appendChild(buildPileAmount);
 
-        // ... TODO
+        buildPiles[i].onmouseover = () => {
+
+            if (cardSelected) {
+
+                coveredCardString = buildPiles[i].childNodes[0].childNodes[0].className;
+                buildPiles[i].childNodes[0].childNodes[0].className = selectedCardString + " semi-transparent";
+            }
+        }
+
+        buildPiles[i].onmouseout = () => {
+
+            if (cardSelected) {
+
+                buildPiles[i].childNodes[0].childNodes[0].className = coveredCardString;
+            }
+        }
+
+        buildPiles[i].onclick = () => {
+
+            buildPiles[i].childNodes[0].childNodes[0].className = coveredCardString;
+
+            // from hand
+            if (selectedCardPile >= 5) {
+
+                handCards[selectedCardPile-5].childNodes[0].className = "card clickable";
+            }
+
+            // from discard pile
+            else if (selectedCardPile <= 1) {
+
+                // ... TODO
+            }
+
+            // from stock pile
+            else {
+
+                // ... TODO
+            }
+
+            cardSelected = false;
+            socket.emit("TRANSFER", selectedCardPile, i);
+        }
 
         buildLayout.appendChild(buildPiles[i]);
     }
@@ -407,39 +448,29 @@ function game(socket, playerId, gameId, roomName, players, deck, deckStyle) {
 
         handCards[i].onclick = () => {
 
-            //if (!cardSelected) {
+            if (handCards[i].childNodes[0].className.includes("clickable")) {
 
-                if (handCards[i].childNodes[0].className.includes("clickable")) {
+                if (cardSelected) {
 
-                    if (cardSelected) {
+                    if (selectedCardPile >= 5) {
 
-                        if (selectedCardPile >= 5) {
-
-                            handCards[selectedCardPile-5].childNodes[0].className = "card clickable";
-                        }
+                        handCards[selectedCardPile-5].childNodes[0].className = "card clickable";
                     }
-
-                    handCards[i].childNodes[0].className = "card selected";
-
-                    cardSelected = true;
-                    selectedCardPile = 5 + i;
-                    selectedCardString = handCards[i].childNodes[0].childNodes[0].className;
-                    console.log(selectedCardString);
                 }
 
-                else if (handCards[i].childNodes[0].className.includes("selected")) {
+                handCards[i].childNodes[0].className = "card selected";
 
-                    cardSelected = false;
-                    handCards[selectedCardPile - 5].childNodes[0].className = "card clickable";
-                }
+                cardSelected = true;
+                selectedCardPile = 5 + i;
+                selectedCardString = handCards[i].childNodes[0].childNodes[0].className;
+                console.log(selectedCardString);
+            }
 
-                
-            //}
+            else if (handCards[i].childNodes[0].className.includes("selected")) {
 
-            //else {
-
-                
-            //}
+                cardSelected = false;
+                handCards[selectedCardPile - 5].childNodes[0].className = "card clickable";
+            }
         };
 
         handLayout.appendChild(handCards[i]);
@@ -478,6 +509,14 @@ function game(socket, playerId, gameId, roomName, players, deck, deckStyle) {
 
             stockPile.className = "card clickable";
 
+            for (let i = 0; i < 4; i++) {
+
+                if (!discardPiles[i].childNodes[0].childNodes[0].className.includes("empty")) {
+
+                    discardPiles[i].childNodes[0].className = "card clickable";
+                }
+            }
+
             socket.emit("DRAW");
         }
 
@@ -503,6 +542,13 @@ function game(socket, playerId, gameId, roomName, players, deck, deckStyle) {
         }
     });
 
+    socket.on("UPDATE_BUILD_PILE", (pileIndex, size, suit = 0, value = 0) => {
+
+        let updatedBuildPile = document.getElementById("build-pile-" + pileIndex);
+        updatedBuildPile.childNodes[0].childNodes[0].className = (size == 0 ? "empty" : ((deck.name == "Poker" ? deck.suits[suit] + " " : "") + deck.values[value]));
+        updatedBuildPile.childNodes[1].innerText = (size == 0 ? "Build Pile " + (pileIndex + 1) : size);
+    });
+
     socket.on("UPDATE_STOCK_PILE", (player, size, suit, value) => {
 
         let updatedStockPile = document.getElementById("stock-pile-" + player);
@@ -515,6 +561,17 @@ function game(socket, playerId, gameId, roomName, players, deck, deckStyle) {
         let updatedDiscardPile = document.getElementById("discard-pile-" + player + "-" + pileIndex);
         updatedDiscardPile.childNodes[0].childNodes[0].className = (size == 0 ? "empty" : ((deck.name == "Poker" ? deck.suits[suit] + " " : "") + deck.values[value]));
         updatedDiscardPile.childNodes[1].innerText = (size == 0 ? "Discard Pile " + (pileIndex + 1) : size);
+
+        if (player == playerId) {
+
+            for (let i = 0; i < 4; i++) {
+
+                if (!discardPiles[i].childNodes[0].childNodes[0].className.includes("empty")) {
+
+                    discardPiles[i].childNodes[0].className = "card clickable";
+                }
+            }
+        }
     });
 
     socket.on("NOT_ALLOWED", () => {

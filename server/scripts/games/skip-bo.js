@@ -8,9 +8,10 @@ const numHandCards = 5;
 
 class Gamestate {
 
-    constructor(numPlayers, playWithPokerDecks = false) {
+    constructor(numPlayers, playWithPokerDecks = false, numDescendingPiles = 2) {
 
         this.numPlayers = numPlayers;
+        this.numDescendingPiles = numDescendingPiles;
         this.playerTurn = 0;
         
         // You can play with three poker decks instead of one Skip-Bo deck.
@@ -54,10 +55,10 @@ class Gamestate {
         this.buildPiles = new Array(numBuildPiles);
 
         // Initialize each build pile with an empty deck
-        this.buildPiles.forEach(element => {
+        for (let i = 0; i < numBuildPiles; i++) {
 
-            element = new Deck();
-        });
+            this.buildPiles[i] = new Deck();
+        }
 
         // The amount of cards on a stock pile depends on the number of players.
         let stockPileSize = (numPlayers <= 4) ? 30 : 20;
@@ -148,32 +149,114 @@ class Gamestate {
         // from hand cards
         else {
 
-            card = this.playerCards[this.playerTurn][1][originPile - 5];
-
-            console.log("Player " + this.playerTurn + " wants to move");
-            console.log(card);
+            let hand = this.playerCards[this.playerTurn][1];
+            card = hand[originPile - 5];
 
             // to build pile
             if (targetPile <= 3) {
 
+                let pile = this.buildPiles[targetPile];
+                console.log(this.buildPiles);
+                console.log(targetPile);
 
+                if (this.build(card, pile, targetPile)) {
+
+                    // remove card from hand
+                    hand.splice(originPile - 5, 1);
+
+                    // draw new hand if necessary
+                    if (hand.length == 0) {
+
+                        this.drawHand(this.playerTurn);
+                    }
+
+                    return true;
+                }
             }
 
             // to discard pile (ends the turn)
             else if (targetPile <= 7) {
 
                 // remove card from hand
-                this.playerCards[this.playerTurn][1].splice(originPile - 5, 1);
+                hand.splice(originPile - 5, 1);
+
+                // draw new hand if necessary
+                if (hand.length == 0) {
+
+                    this.drawHand(this.playerTurn);
+                }
 
                 let pile = this.playerCards[this.playerTurn][targetPile - 2] // [2 + targetPile - 4]
                 pile.addCard(card.suit, card.value);
 
-                console.log("...to " + pile);
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    build(card, pile, pileIndex = 0) {
+
+        // empty pile
+        if (pile.size == 0) {
+
+            if (card.value == 0 ||                                                              // joker
+                pileIndex >= (numBuildPiles - this.numDescendingPiles) && card.value == 12 ||   // descending
+                pileIndex < (numBuildPiles - this.numDescendingPiles) && card.value == 1)       // ascending
+            {
+                
+                pile.addCard(card.suit, card.value);
+                return true;
+            }
+        }
+
+        // regular pile
+        else if (pile.size < 11) {
+
+                // joker
+            if (card.value == 0 ||          
+                // descending
+                pileIndex >= (numBuildPiles - this.numDescendingPiles) && (
+                    // regular top card
+                    pile.topCard.value != 0 && card.value == pile.topCard.value - 1 ||
+                    // joker on top
+                    pile.topCard.value == 0 && card.value == 12 - pile.size
+                ) ||
+                // ascending
+                pileIndex < (numBuildPiles - this.numDescendingPiles) && (
+                    // regular top card
+                    pile.topCard.value != 0 && card.value == pile.topCard.value + 1 ||
+                    // joker on top
+                    pile.topCard.value == 0 && card.value == pile.size + 1
+                ))
+            {
+                
+                pile.addCard(card.suit, card.value);
+                return true;
+            }
+        }
+
+        // finished pile
+        else {
+
+            if (card.value == 0 ||                                                              // joker
+                pileIndex >= (numBuildPiles - this.numDescendingPiles) && card.value == 1 ||    // descending
+                pileIndex < (numBuildPiles - this.numDescendingPiles) && card.value == 12)      // ascending
+            {
+                
+                pile.addCard(card.suit, card.value);
+
+                // add the finished pile to the draw pile
+                this.drawPile.combine(pile);
+
+                // shuffle the extended draw pile
+                this.drawPile.shuffle();
+
+                // reset the finished pile
+                pile = new Deck();
 
                 return true;
-
-                //let topCard = pile.topCard;
-                //if (card.value == 0 || )
             }
         }
 

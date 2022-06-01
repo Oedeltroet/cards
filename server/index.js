@@ -8,11 +8,11 @@ const data = {
       "script" : "skip-bo.js"
     },
     
-    {
-      "name" : "UNO",
-      "icon" : "https://upload.wikimedia.org/wikipedia/commons/f/f9/UNO_Logo.svg",
-      "script" : "uno.js"
-    }
+    // {
+    //   "name" : "UNO",
+    //   "icon" : "https://upload.wikimedia.org/wikipedia/commons/f/f9/UNO_Logo.svg",
+    //   "script" : "uno.js"
+    // }
   ],
 
   "decks" : [
@@ -297,7 +297,6 @@ io.on("connection", (socket) => {
             if (targetPile >= 4) {
 
               let discardPile = game.playerCards[playerId][targetPile - 2];
-              console.log(game.playerCards[playerId]);
 
               if (discardPile.size == 0) {
 
@@ -311,6 +310,22 @@ io.on("connection", (socket) => {
 
               game.nextTurn();
               io.to(roomName).emit("TURN", game.playerTurn);
+            }
+
+            // to build pile
+            else {
+
+              let buildPile = game.buildPiles[targetPile];
+
+              if (buildPile.size == 0) {
+
+                io.to(roomName).emit("UPDATE_BUILD_PILE", targetPile, buildPile.size);
+              }
+
+              else {
+
+                io.to(roomName).emit("UPDATE_BUILD_PILE", targetPile, buildPile.size, buildPile.topCard.suit, buildPile.topCard.value);
+              }
             }
           }
 
