@@ -58,7 +58,7 @@ class Deck {
 
     addCard(suit, value) {
 
-        Array.prototype.push(this.cards, new Card(suit, value));
+        this.cards.push(new Card(suit, value));
     }
 
     draw(numCards = 1) {

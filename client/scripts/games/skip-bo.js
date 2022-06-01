@@ -129,6 +129,11 @@ function openLobby(socket, gameId, roomName) {
 
 function game(socket, playerId, gameId, roomName, players, deck, deckStyle) {
 
+    let cardSelected = false;
+    let selectedCardPile;
+    let selectedCardString = "";
+    let coveredCardString = "";
+
     document.body.innerHTML = "";
 
         /* CREATE STATUS BAR */
@@ -179,8 +184,10 @@ function game(socket, playerId, gameId, roomName, players, deck, deckStyle) {
     otherPlayersLayout.className = "other-players-layout";
     otherPlayersLayout.style.display = "grid";
     otherPlayersLayout.style.gridTemplateColumns = "repeat(auto-fit, minmax(min(100%/3, max(120px, 100%/5)), 1fr))";
+    otherPlayersLayout.style.gridColumnGap = "10px";
     otherPlayersLayout.style.justifyContent = "center";
     otherPlayersLayout.style.alignItems = "center";
+    otherPlayersLayout.style.marginTop = "10px";
 
     for (let i = 0; i < players; i++) {
 
@@ -286,6 +293,8 @@ function game(socket, playerId, gameId, roomName, players, deck, deckStyle) {
         buildPiles[i].appendChild(buildPile);
         buildPiles[i].appendChild(buildPileAmount);
 
+        // ... TODO
+
         buildLayout.appendChild(buildPiles[i]);
     }
 
@@ -331,6 +340,44 @@ function game(socket, playerId, gameId, roomName, players, deck, deckStyle) {
         discardPiles[i].appendChild(discardPile);
         discardPiles[i].appendChild(discardPileAmount);
 
+        discardPiles[i].onmouseover = () => {
+
+            if (cardSelected) {
+
+                // only hand cards can be discarded
+                if (selectedCardPile >= 5) {
+
+                    coveredCardString = discardPiles[i].childNodes[0].childNodes[0].className;
+                    discardPiles[i].childNodes[0].childNodes[0].className = selectedCardString + " semi-transparent";
+                }
+            }
+        }
+
+        discardPiles[i].onmouseout = () => {
+
+            if (cardSelected) {
+
+                // only hand cards can be discarded
+                if (selectedCardPile >= 5) {
+
+                    discardPiles[i].childNodes[0].childNodes[0].className = coveredCardString;
+                }
+            }
+        }
+
+        discardPiles[i].onclick = () => {
+
+            // only hand cards can be discarded
+            if (cardSelected && selectedCardPile >= 5) {
+
+                discardPiles[i].childNodes[0].childNodes[0].className = coveredCardString;
+                handCards[selectedCardPile-5].childNodes[0].className = "card clickable";
+
+                cardSelected = false;
+                socket.emit("TRANSFER", selectedCardPile, 4 + i);
+            }
+        }
+
         discardLayout.appendChild(discardPiles[i]);
     }
 
@@ -357,6 +404,43 @@ function game(socket, playerId, gameId, roomName, players, deck, deckStyle) {
         handCards[i] = document.createElement("div");
         handCards[i].className = "pile";
         handCards[i].appendChild(playerHand);
+
+        handCards[i].onclick = () => {
+
+            //if (!cardSelected) {
+
+                if (handCards[i].childNodes[0].className.includes("clickable")) {
+
+                    if (cardSelected) {
+
+                        if (selectedCardPile >= 5) {
+
+                            handCards[selectedCardPile-5].childNodes[0].className = "card clickable";
+                        }
+                    }
+
+                    handCards[i].childNodes[0].className = "card selected";
+
+                    cardSelected = true;
+                    selectedCardPile = 5 + i;
+                    selectedCardString = handCards[i].childNodes[0].childNodes[0].className;
+                    console.log(selectedCardString);
+                }
+
+                else if (handCards[i].childNodes[0].className.includes("selected")) {
+
+                    cardSelected = false;
+                    handCards[selectedCardPile - 5].childNodes[0].className = "card clickable";
+                }
+
+                
+            //}
+
+            //else {
+
+                
+            //}
+        };
 
         handLayout.appendChild(handCards[i]);
     }
@@ -392,7 +476,9 @@ function game(socket, playerId, gameId, roomName, players, deck, deckStyle) {
             statusBar.style.backgroundColor = "red";
             statusText.innerText = "It's your turn!";
 
-            socket.emit("REQUEST_DRAW");
+            stockPile.className = "card clickable";
+
+            socket.emit("DRAW");
         }
 
         else {
@@ -402,11 +488,18 @@ function game(socket, playerId, gameId, roomName, players, deck, deckStyle) {
         }
     });
 
-    socket.on("DRAW", (length, hand) => {
+    socket.on("UPDATE_HAND", (length, hand) => {
 
         for (let i = 0; i < length; i++) {
 
             handCards[i].childNodes[0].childNodes[0].className = deck.suits[hand[i][0]] + " " + deck.values[hand[i][1]];
+            handCards[i].childNodes[0].className = "card clickable";
+        }
+
+        for (let i = length; i < 5; i++) {
+
+            handCards[i].childNodes[0].childNodes[0].className = "empty";
+            handCards[i].childNodes[0].className = "card";
         }
     });
 
@@ -415,5 +508,17 @@ function game(socket, playerId, gameId, roomName, players, deck, deckStyle) {
         let updatedStockPile = document.getElementById("stock-pile-" + player);
         updatedStockPile.childNodes[0].childNodes[0].className = (deck.name == "Poker" ? deck.suits[suit] + " " : "") + deck.values[value];
         updatedStockPile.childNodes[1].innerText = size;
+    });
+
+    socket.on("UPDATE_DISCARD_PILE", (player, pileIndex, size, suit = 0, value = 0) => {
+
+        let updatedDiscardPile = document.getElementById("discard-pile-" + player + "-" + pileIndex);
+        updatedDiscardPile.childNodes[0].childNodes[0].className = (size == 0 ? "empty" : ((deck.name == "Poker" ? deck.suits[suit] + " " : "") + deck.values[value]));
+        updatedDiscardPile.childNodes[1].innerText = (size == 0 ? "Discard Pile " + (pileIndex + 1) : size);
+    });
+
+    socket.on("NOT_ALLOWED", () => {
+
+        statusText.innerText = "This move is not allowed!"
     });
 }

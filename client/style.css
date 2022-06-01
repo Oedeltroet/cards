@@ -9,7 +9,6 @@
 body {
 
     margin-top: 20px;
-    margin-bottom: 20px;
 
     background-color: rgb(0, 120, 60);
 }
@@ -63,4 +62,9 @@ p {
     font-weight: bold;
     position: relative;
     margin-top: 2px;
+}
+
+.semi-transparent {
+
+    opacity: 50%;
 }

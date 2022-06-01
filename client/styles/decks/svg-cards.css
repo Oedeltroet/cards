@@ -1,16 +1,21 @@
 .card {
 
     border: 2px solid transparent;
+    border-radius: 10px;
 
     max-width: 173px;
     max-height: 249px;
     overflow: hidden;
 }
 
-.card:hover {
+.clickable:hover {
 
-    border-radius: 10px;
     border: 2px solid yellow;
+}
+
+.selected {
+
+    border: 2px solid white;
 }
 
 .card div {

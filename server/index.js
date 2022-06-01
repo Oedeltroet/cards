@@ -97,6 +97,7 @@ const rooms = io.of("/").adapter.rooms;
 let games = new Map();
 let players;
 let numPlayers;
+let pickPile;
 
 io.on("connection", (socket) => {
 
@@ -227,7 +228,6 @@ io.on("connection", (socket) => {
         gameLogic = require("./scripts/games/" + data.games[gameId].script);
         games.set(roomName, new gameLogic.Gamestate(numPlayers, playWithPokerDecks));
         game = games.get(roomName);
-        console.log(game);
 
         io.to(roomName).emit("GAME_STARTED", numPlayers, playWithPokerDecks ? data.decks[0] : data.decks[1], 1);
         io.to(roomName).emit("TURN", game.playerTurn);
@@ -255,7 +255,7 @@ io.on("connection", (socket) => {
         console.log("Player " + playerId + ": stock pile top card is " + data.decks[0].values[stockPile.topCard.value] + " of " + data.decks[0].suits[stockPile.topCard.suit]);
         io.to(roomName).emit("UPDATE_STOCK_PILE", playerId, stockPile.size, stockPile.topCard.suit, stockPile.topCard.value);
 
-        socket.on("REQUEST_DRAW", () => {
+        socket.on("DRAW", () => {
 
           console.log("Player " + playerId + " wants to draw.");
 
@@ -264,8 +264,6 @@ io.on("connection", (socket) => {
             game.drawHand(playerId);
 
             let handCards = game.playerCards[playerId][1];
-            console.log("Player " + playerId + ": new hand (length " + handCards.length + ") is " + handCards);
-
             let arr = [];
 
             for (let i = 0; i < handCards.length; i++) {
@@ -273,7 +271,52 @@ io.on("connection", (socket) => {
               arr.push(handCards[i].data);
             }
 
-            socket.emit("DRAW", handCards.length, arr);
+            socket.emit("UPDATE_HAND", handCards.length, arr);
+          }
+        });
+
+        socket.on("TRANSFER", (originPile, targetPile) => {
+
+          if (game.transfer(originPile, targetPile)) {
+
+            // from hand cards
+            if (originPile >= 5) {
+
+              let handCards = game.playerCards[playerId][1];
+              let arr = [];
+
+              for (let i = 0; i < handCards.length; i++) {
+
+                arr.push(handCards[i].data);
+              }
+
+              socket.emit("UPDATE_HAND", handCards.length, arr);
+            }
+
+            // to discard pile (ends the turn)
+            if (targetPile >= 4) {
+
+              let discardPile = game.playerCards[playerId][targetPile - 2];
+              console.log(game.playerCards[playerId]);
+
+              if (discardPile.size == 0) {
+
+                io.to(roomName).emit("UPDATE_DISCARD_PILE", playerId, targetPile - 4, discardPile.size);
+              }
+
+              else {
+
+                io.to(roomName).emit("UPDATE_DISCARD_PILE", playerId, targetPile - 4, discardPile.size, discardPile.topCard.suit, discardPile.topCard.value);
+              }
+
+              game.nextTurn();
+              io.to(roomName).emit("TURN", game.playerTurn);
+            }
+          }
+
+          else {
+
+            socket.emit("NOT_ALLOWED");
           }
         });
 

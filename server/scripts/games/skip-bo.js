@@ -102,8 +102,82 @@ class Gamestate {
 
             hand.push(this.drawPile.draw());
         }
+    }
 
-        console.log(hand);
+    /*
+        PLAYER CARDS CODES
+        0 = stock pile (pile)
+        1 = hand cards (array)
+        2..5 = discard piles (pile)
+
+        ORIGIN PILE CODES
+        0 = stock pile
+        1..4 = discard piles
+        5..9 = hand cards
+
+        TARGET PILE CODES
+        0..3 = build piles
+        4..7 = discard piles
+    */
+    transfer(originPile, targetPile) {
+
+        let card;
+
+        // from stock pile
+        if (originPile == 0) {
+
+            card = this.playerCards[this.playerTurn][0].draw();
+
+            // to build pile
+            if (targetPile <= 3) {
+
+                // ... TODO
+            }
+        }
+
+        // from discard pile
+        else if (originPile < 5) {
+
+            // to build pile
+            if (targetPile <= 3) {
+
+                // ... TODO
+            }
+        }
+
+        // from hand cards
+        else {
+
+            card = this.playerCards[this.playerTurn][1][originPile - 5];
+
+            console.log("Player " + this.playerTurn + " wants to move");
+            console.log(card);
+
+            // to build pile
+            if (targetPile <= 3) {
+
+
+            }
+
+            // to discard pile (ends the turn)
+            else if (targetPile <= 7) {
+
+                // remove card from hand
+                this.playerCards[this.playerTurn][1].splice(originPile - 5, 1);
+
+                let pile = this.playerCards[this.playerTurn][targetPile - 2] // [2 + targetPile - 4]
+                pile.addCard(card.suit, card.value);
+
+                console.log("...to " + pile);
+
+                return true;
+
+                //let topCard = pile.topCard;
+                //if (card.value == 0 || )
+            }
+        }
+
+        return false;
     }
 }
 
