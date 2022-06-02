@@ -68,3 +68,11 @@ p {
 
     opacity: 50%;
 }
+
+@keyframes rainbow {
+
+    0%   {background-color: rgb(200, 20, 20);}
+    33%  {background-color: rgb(20, 200, 20);}
+    66%  {background-color: rgb(20, 20, 200);}
+    100% {background-color: rgb(200, 20, 20);}
+}

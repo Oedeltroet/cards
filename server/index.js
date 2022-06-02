@@ -57,7 +57,7 @@ const data = {
   ],
 };
 
-var debug = true;
+var debug = false;
 var server, io;
 
 if (debug) {
@@ -97,7 +97,6 @@ const rooms = io.of("/").adapter.rooms;
 let games = new Map();
 let players;
 let numPlayers;
-let pickPile;
 
 io.on("connection", (socket) => {
 
@@ -202,6 +201,7 @@ io.on("connection", (socket) => {
 
     let gameLogic;
     let playWithPokerDecks = true;
+    let numDescendingPiles = 2;
     
     players = io.sockets.adapter.rooms.get(currentRoomName);
     numPlayers = players.size;
@@ -226,10 +226,10 @@ io.on("connection", (socket) => {
         /* SKIP-BO */
 
         gameLogic = require("./scripts/games/" + data.games[gameId].script);
-        games.set(roomName, new gameLogic.Gamestate(numPlayers, playWithPokerDecks));
+        games.set(roomName, new gameLogic.Gamestate(numPlayers, playWithPokerDecks, numDescendingPiles));
         game = games.get(roomName);
 
-        io.to(roomName).emit("GAME_STARTED", numPlayers, playWithPokerDecks ? data.decks[0] : data.decks[1], 1);
+        io.to(roomName).emit("GAME_STARTED", numPlayers, numDescendingPiles, playWithPokerDecks ? data.decks[0] : data.decks[1], 1);
         io.to(roomName).emit("TURN", game.playerTurn);
 
         break;
@@ -273,89 +273,102 @@ io.on("connection", (socket) => {
           }
         });
 
-        socket.on("TRANSFER", (originPile, targetPile) => {
+        socket.on("TRANSFER", (playerId, originPile, targetPile) => {
 
-          if (game.transfer(originPile, targetPile)) {
+          if (playerId == game.playerTurn) {
 
-            // from stock pile
-            if (originPile == 0) {
+            if (game.transfer(originPile, targetPile)) {
 
-              // ... TODO
-            }
+              // from stock pile
+              if (originPile == 0) {
 
-            // from discard pile
-            else if (originPile <= 4) {
+                let stockPile = game.playerCards[playerId][0];
 
-              let discardPile = game.playerCards[playerId][(originPile - 1) + 2];
+                if (stockPile.size == 0) {
 
-              if (discardPile.size == 0) {
+                  io.to(roomName).emit("WON", playerId);
+                }
 
-                io.to(roomName).emit("UPDATE_DISCARD_PILE", playerId, originPile - 1, discardPile.size);
+                else {
+
+                  io.to(roomName).emit("UPDATE_STOCK_PILE", playerId, stockPile.size, stockPile.topCard.suit, stockPile.topCard.value);
+                }
               }
 
+              // from discard pile
+              else if (originPile <= 4) {
+
+                let discardPile = game.playerCards[playerId][(originPile - 1) + 2];
+
+                if (discardPile.size == 0) {
+
+                  io.to(roomName).emit("UPDATE_DISCARD_PILE", playerId, originPile - 1, discardPile.size);
+                }
+
+                else {
+
+                  io.to(roomName).emit("UPDATE_DISCARD_PILE", playerId, originPile - 1, discardPile.size, discardPile.topCard.suit, discardPile.topCard.value);
+                }
+              }
+
+              // from hand cards
               else {
 
-                io.to(roomName).emit("UPDATE_DISCARD_PILE", playerId, originPile - 1, discardPile.size, discardPile.topCard.suit, discardPile.topCard.value);
-              }
-            }
+                let handCards = game.playerCards[playerId][1];
+                let arr = [];
 
-            // from hand cards
-            else {
+                for (let i = 0; i < handCards.length; i++) {
 
-              let handCards = game.playerCards[playerId][1];
-              let arr = [];
+                  arr.push(handCards[i].data);
+                }
 
-              for (let i = 0; i < handCards.length; i++) {
-
-                arr.push(handCards[i].data);
+                socket.emit("UPDATE_HAND", handCards.length, arr);
               }
 
-              socket.emit("UPDATE_HAND", handCards.length, arr);
-            }
+              // to discard pile (ends the turn)
+              if (targetPile >= 4) {
 
-            // to discard pile (ends the turn)
-            if (targetPile >= 4) {
+                let discardPile = game.playerCards[playerId][targetPile - 2];
 
-              let discardPile = game.playerCards[playerId][targetPile - 2];
+                // if (discardPile.size == 0) {
 
-              // if (discardPile.size == 0) {
+                //   io.to(roomName).emit("UPDATE_DISCARD_PILE", playerId, targetPile - 4, discardPile.size);
+                // }
 
-              //   io.to(roomName).emit("UPDATE_DISCARD_PILE", playerId, targetPile - 4, discardPile.size);
-              // }
+                // else {
 
-              // else {
+                  io.to(roomName).emit("UPDATE_DISCARD_PILE", playerId, targetPile - 4, discardPile.size, discardPile.topCard.suit, discardPile.topCard.value);
+                // }
 
-                io.to(roomName).emit("UPDATE_DISCARD_PILE", playerId, targetPile - 4, discardPile.size, discardPile.topCard.suit, discardPile.topCard.value);
-              // }
+                game.nextTurn();
 
-              game.nextTurn();
-
-              // very ugly code, but i haven't come up with a better solution yet
-              io.to(roomName).emit("TURN", game.playerTurn);
-              io.to(roomName).emit("TURN", game.playerTurn);
-              io.to(roomName).emit("TURN", game.playerTurn);
-            }
-
-            // to build pile
-            else {
-
-              let buildPile = game.buildPiles[targetPile];
-
-              if (buildPile.size == 0) {
-
-                io.to(roomName).emit("UPDATE_BUILD_PILE", targetPile, buildPile.size);
+                // very ugly code, but i haven't come up with a better solution yet
+                io.to(roomName).emit("TURN", game.playerTurn);
+                io.to(roomName).emit("TURN", game.playerTurn);
+                io.to(roomName).emit("TURN", game.playerTurn);
               }
 
+              // to build pile
               else {
 
-                io.to(roomName).emit("UPDATE_BUILD_PILE", targetPile, buildPile.size, buildPile.topCard.suit, buildPile.topCard.value);
+                let buildPile = game.buildPiles[targetPile];
+
+                if (buildPile.size == 0) {
+
+                  io.to(roomName).emit("UPDATE_BUILD_PILE", targetPile, 0, 0, 0);
+                }
+
+                else {
+
+                  io.to(roomName).emit("UPDATE_BUILD_PILE", targetPile, buildPile.size, buildPile.topCard.suit, buildPile.topCard.value);
+                }
               }
             }
-          }
 
-          else {
+            else {
 
-            socket.emit("NOT_ALLOWED");
+              socket.emit("NOT_ALLOWED");
+            }
           }
         });
 

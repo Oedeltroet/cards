@@ -120,20 +120,19 @@ function openLobby(socket, gameId, roomName) {
         console.log("You are player " + myId);
     });
 
-    socket.on("GAME_STARTED", (players, deck, deckStyle) => {
+    socket.on("GAME_STARTED", (players, numDescendingPiles, deck, deckStyle) => {
 
         console.log("The game has started.")
-        game(socket, myId, gameId, roomName, players, deck, deckStyle);
+        game(socket, myId, gameId, roomName, players, numDescendingPiles, deck, deckStyle);
     });
 }
 
-function game(socket, playerId, gameId, roomName, players, deck, deckStyle) {
+function game(socket, playerId, gameId, roomName, players, numDescendingPiles, deck, deckStyle) {
 
     let cardSelected = false;
     let selectedCardPile;
     let selectedCardString = "";
     let coveredCardString = "";
-    let playerTurn = 0;
 
     document.body.innerHTML = "";
 
@@ -230,7 +229,7 @@ function game(socket, playerId, gameId, roomName, players, deck, deckStyle) {
             discardPile.className = "card";
             discardPile.appendChild(discardPileTopCard);
             let discardPileAmount = document.createElement("p");
-            discardPileAmount.innerText = "Discard Pile " + (j + 1);
+            discardPileAmount.innerText = "0";
 
             discardPiles[j] = document.createElement("div");
             discardPiles[j].id = "discard-pile-" + i + "-" + j;
@@ -286,7 +285,7 @@ function game(socket, playerId, gameId, roomName, players, deck, deckStyle) {
         buildPile.className = "card";
         buildPile.appendChild(buildPileTopCard);
         let buildPileAmount = document.createElement("p");
-        buildPileAmount.innerText = "Build Pile " + (i + 1);
+        buildPileAmount.innerText = (i >= (4 - numDescendingPiles)) ? "↓": "↑";
 
         buildPiles[i] = document.createElement("div");
         buildPiles[i].id = "build-pile-" + i;
@@ -313,28 +312,31 @@ function game(socket, playerId, gameId, roomName, players, deck, deckStyle) {
 
         buildPiles[i].onclick = () => {
 
-            buildPiles[i].childNodes[0].childNodes[0].className = coveredCardString;
+            if (cardSelected) {
 
-            // from hand
-            if (selectedCardPile >= 5) {
+                buildPiles[i].childNodes[0].childNodes[0].className = coveredCardString;
 
-                handCards[selectedCardPile - 5].childNodes[0].className = "card clickable";
+                // from hand
+                if (selectedCardPile >= 5) {
+
+                    handCards[selectedCardPile - 5].childNodes[0].className = "card clickable";
+                }
+
+                // from discard pile
+                else if (selectedCardPile == 1) {
+
+                    discardPiles[selectedCardPile - 1].childNodes[0].className = "card clickable";
+                }
+
+                // from stock pile
+                else {
+
+                    stockPile.className = "card clickable";
+                }
+
+                cardSelected = false;
+                socket.emit("TRANSFER", playerId, selectedCardPile, i);
             }
-
-            // from discard pile
-            else if (selectedCardPile <= 1) {
-
-                discardPiles[selectedCardPile - 1].childNodes[0].className = "card clickable";
-            }
-
-            // from stock pile
-            else {
-
-                // ... TODO
-            }
-
-            cardSelected = false;
-            socket.emit("TRANSFER", selectedCardPile, i);
         }
 
         buildLayout.appendChild(buildPiles[i]);
@@ -352,6 +354,37 @@ function game(socket, playerId, gameId, roomName, players, deck, deckStyle) {
     let stockPileContainer = document.createElement("div");
     stockPileContainer.id = "stock-pile-" + playerId;
     stockPileContainer.className = "pile";
+
+    stockPileContainer.onclick = () => {
+
+        if (stockPile.className.includes("clickable")) {
+
+            if (cardSelected) {
+
+                if (selectedCardPile == 0) {
+
+                    stockPile.className = "card clickable";
+                }
+            }
+
+            else {
+
+                stockPile.className = "card selected";
+
+                cardSelected = true;
+                selectedCardPile = 0;
+                selectedCardString = stockPileTopCard.className;
+                console.log("Selected card: " + selectedCardString);
+            }
+        }
+
+        else if (stockPile.className.includes("selected")) {
+
+            cardSelected = false;
+            stockPile.className = "card clickable";
+        }
+    };
+
     stockPileContainer.appendChild(stockPile);
     stockPileContainer.appendChild(stockPileAmount);
 
@@ -374,7 +407,7 @@ function game(socket, playerId, gameId, roomName, players, deck, deckStyle) {
         discardPile.className = "card";
         discardPile.appendChild(discardPileTopCard);
         let discardPileAmount = document.createElement("p");
-        discardPileAmount.innerText = "Discard Pile " + (i + 1);
+        discardPileAmount.innerText = "0";
 
         discardPiles[i] = document.createElement("div");
         discardPiles[i].id = "discard-pile-" + playerId + "-" + i;
@@ -418,7 +451,7 @@ function game(socket, playerId, gameId, roomName, players, deck, deckStyle) {
                     handCards[selectedCardPile-5].childNodes[0].className = "card clickable";
 
                     cardSelected = false;
-                    socket.emit("TRANSFER", selectedCardPile, 4 + i);
+                    socket.emit("TRANSFER", playerId, selectedCardPile, 4 + i);
                 }
 
                 // put the selected card back
@@ -587,11 +620,22 @@ function game(socket, playerId, gameId, roomName, players, deck, deckStyle) {
         }
     });
 
-    socket.on("UPDATE_BUILD_PILE", (pileIndex, size, suit = 0, value = 0) => {
+    socket.on("UPDATE_BUILD_PILE", (pileIndex, size, suit, value) => {
 
         let updatedBuildPile = document.getElementById("build-pile-" + pileIndex);
         updatedBuildPile.childNodes[0].childNodes[0].className = (size == 0 ? "empty" : ((deck.name == "Poker" ? deck.suits[suit] + " " : "") + deck.values[value]));
-        updatedBuildPile.childNodes[1].innerText = (size == 0 ? "Build Pile " + (pileIndex + 1) : size);
+        
+        let text = "";
+        let descending = pileIndex >= (4 - numDescendingPiles);
+
+        text += descending ? "↓" : "↑";
+        
+        if (size > 0) {
+
+            text += deck.values[descending ? 12 - (size - 1) : size];
+        }
+
+        updatedBuildPile.childNodes[1].innerText = text;
     });
 
     socket.on("UPDATE_STOCK_PILE", (player, size, suit, value) => {
@@ -605,7 +649,7 @@ function game(socket, playerId, gameId, roomName, players, deck, deckStyle) {
 
         let updatedDiscardPile = document.getElementById("discard-pile-" + player + "-" + pileIndex);
         updatedDiscardPile.childNodes[0].childNodes[0].className = (size == 0 ? "empty" : ((deck.name == "Poker" ? deck.suits[suit] + " " : "") + deck.values[value]));
-        updatedDiscardPile.childNodes[1].innerText = (size == 0 ? "Discard Pile " + (pileIndex + 1) : size);
+        updatedDiscardPile.childNodes[1].innerText = size;
 
         if (player == playerId) {
 
@@ -626,6 +670,32 @@ function game(socket, playerId, gameId, roomName, players, deck, deckStyle) {
 
     socket.on("NOT_ALLOWED", () => {
 
-        statusText.innerText = "This move is not allowed!"
+        statusText.innerText = "This move is not allowed!";
+
+        [].forEach.call(document.getElementsByClassName("selected"), (element) => {
+
+            element.className = "card clickable"
+        });
+    });
+
+    socket.on("WON", (player) => {
+
+        mainLayout.innerHTML = "";
+
+        if (playerId == player) {
+
+            statusBar.style.animationName = "rainbow";
+            statusBar.style.animationDuration = "4s";
+            statusBar.style.animationIterationCount = "infinite";
+            statusBar.style.animationTimingFunction = "linear";
+
+            statusText.innerText = "You are the winner. Congratulations!";
+        }
+
+        else {
+
+            statusBar.style.backgroundColor = "rgb(0, 120, 60)";
+            statusText.innerText = "Player " + player + " won the game. Better luck next time!";
+        }
     });
 }

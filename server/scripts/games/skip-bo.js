@@ -50,6 +50,8 @@ class Gamestate {
         // Now there is either a 156 cards poker style deck or a 162 cards Skip-Bo deck.
         // Time to shuffle!
         this.drawPile.shuffle();
+        this.drawPile.shuffle();
+        this.drawPile.shuffle();
 
         // Create an array for the build piles
         this.buildPiles = new Array(numBuildPiles);
@@ -127,19 +129,21 @@ class Gamestate {
         // from stock pile
         if (originPile == 0) {
 
-            card = this.playerCards[this.playerTurn][0].draw();
+            card = this.playerCards[this.playerTurn][0].draw(1);
 
             // to build pile
             if (targetPile <= 3) {
 
-                // ... TODO
+                let pile = this.buildPiles[targetPile];
+                return this.build(card, pile, targetPile);
             }
         }
 
         // from discard pile
         else if (originPile < 5) {
 
-            card = this.playerCards[this.playerTurn][(originPile - 1) + 2].draw();
+            console.log(this.playerCards[this.playerTurn][(originPile - 1) + 2]);
+            card = this.playerCards[this.playerTurn][(originPile - 1) + 2].draw(1);
 
             // to build pile
             if (targetPile <= 3) {
@@ -181,12 +185,6 @@ class Gamestate {
                 // remove card from hand
                 hand.splice(originPile - 5, 1);
 
-                // draw new hand if necessary
-                if (hand.length == 0) {
-
-                    this.drawHand(this.playerTurn);
-                }
-
                 let pile = this.playerCards[this.playerTurn][targetPile - 2] // [2 + targetPile - 4]
                 pile.addCard(card.suit, card.value);
 
@@ -216,7 +214,7 @@ class Gamestate {
         else if (pile.size < 11) {
 
                 // joker
-            if (card.value == 0 ||          
+            if (card.value == 0 ||    
                 // descending
                 pileIndex >= (numBuildPiles - this.numDescendingPiles) && (
                     // regular top card
@@ -241,6 +239,8 @@ class Gamestate {
         // finished pile
         else {
 
+            console.log(card.value);
+
             if (card.value == 0 ||                                                              // joker
                 pileIndex >= (numBuildPiles - this.numDescendingPiles) && card.value == 1 ||    // descending
                 pileIndex < (numBuildPiles - this.numDescendingPiles) && card.value == 12)      // ascending
@@ -255,7 +255,7 @@ class Gamestate {
                 this.drawPile.shuffle();
 
                 // reset the finished pile
-                pile = new Deck();
+                this.buildPiles[pileIndex] = new Deck();
 
                 return true;
             }
