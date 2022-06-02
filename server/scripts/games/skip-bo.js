@@ -139,10 +139,13 @@ class Gamestate {
         // from discard pile
         else if (originPile < 5) {
 
+            card = this.playerCards[this.playerTurn][(originPile - 1) + 2].draw();
+
             // to build pile
             if (targetPile <= 3) {
 
-                // ... TODO
+                let pile = this.buildPiles[targetPile];
+                return this.build(card, pile, targetPile);
             }
         }
 
@@ -156,8 +159,6 @@ class Gamestate {
             if (targetPile <= 3) {
 
                 let pile = this.buildPiles[targetPile];
-                console.log(this.buildPiles);
-                console.log(targetPile);
 
                 if (this.build(card, pile, targetPile)) {
 

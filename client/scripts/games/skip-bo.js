@@ -133,6 +133,7 @@ function game(socket, playerId, gameId, roomName, players, deck, deckStyle) {
     let selectedCardPile;
     let selectedCardString = "";
     let coveredCardString = "";
+    let playerTurn = 0;
 
     document.body.innerHTML = "";
 
@@ -317,13 +318,13 @@ function game(socket, playerId, gameId, roomName, players, deck, deckStyle) {
             // from hand
             if (selectedCardPile >= 5) {
 
-                handCards[selectedCardPile-5].childNodes[0].className = "card clickable";
+                handCards[selectedCardPile - 5].childNodes[0].className = "card clickable";
             }
 
             // from discard pile
             else if (selectedCardPile <= 1) {
 
-                // ... TODO
+                discardPiles[selectedCardPile - 1].childNodes[0].className = "card clickable";
             }
 
             // from stock pile
@@ -408,14 +409,39 @@ function game(socket, playerId, gameId, roomName, players, deck, deckStyle) {
 
         discardPiles[i].onclick = () => {
 
-            // only hand cards can be discarded
-            if (cardSelected && selectedCardPile >= 5) {
+            if (cardSelected) {
 
-                discardPiles[i].childNodes[0].childNodes[0].className = coveredCardString;
-                handCards[selectedCardPile-5].childNodes[0].className = "card clickable";
+                // only hand cards can be discarded
+                if (selectedCardPile >= 5) {
 
-                cardSelected = false;
-                socket.emit("TRANSFER", selectedCardPile, 4 + i);
+                    discardPiles[i].childNodes[0].childNodes[0].className = coveredCardString;
+                    handCards[selectedCardPile-5].childNodes[0].className = "card clickable";
+
+                    cardSelected = false;
+                    socket.emit("TRANSFER", selectedCardPile, 4 + i);
+                }
+
+                // put the selected card back
+                else if (selectedCardPile - 1 == i) {
+
+                    cardSelected = false;
+                    discardPiles[i].childNodes[0].className = "card clickable";
+                }
+
+                else {
+
+                    discardPiles[i].childNodes[0].className = "card";
+                }
+            }
+
+            else if (discardPiles[i].childNodes[0].className.includes("clickable")) {
+
+                discardPiles[i].childNodes[0].className = "card selected";
+
+                cardSelected = true;
+                selectedCardPile = 1 + i;
+                selectedCardString = discardPiles[i].childNodes[0].childNodes[0].className;
+                console.log(selectedCardString);
             }
         }
 
@@ -452,9 +478,16 @@ function game(socket, playerId, gameId, roomName, players, deck, deckStyle) {
 
                 if (cardSelected) {
 
+                    // hand card selected
                     if (selectedCardPile >= 5) {
 
-                        handCards[selectedCardPile-5].childNodes[0].className = "card clickable";
+                        handCards[selectedCardPile - 5].childNodes[0].className = "card clickable";
+                    }
+
+                    // discard pile selected
+                    else if (selectedCardPile >= 1) {
+
+                        discardPiles[selectedCardPile - 1].childNodes[0].className = "card clickable";
                     }
                 }
 
@@ -502,6 +535,8 @@ function game(socket, playerId, gameId, roomName, players, deck, deckStyle) {
 
     socket.on("TURN", (player) => {
 
+        playerTurn = player;
+
         if (player == playerId) {
 
             statusBar.style.backgroundColor = "red";
@@ -517,10 +552,20 @@ function game(socket, playerId, gameId, roomName, players, deck, deckStyle) {
                 }
             }
 
+            for (let i = 0; i < 5; i++) {
+
+                handCards[i].childNodes[0].className = "card clickable";
+            }
+
             socket.emit("DRAW");
         }
 
         else {
+
+            [].forEach.call(document.getElementsByClassName("clickable"), (element) => {
+
+                element.className = "card"
+            });
 
             statusBar.style.backgroundColor = "rgb(0, 120, 60)";
             statusText.innerText = "Player " + player + " is playing.";
@@ -569,6 +614,11 @@ function game(socket, playerId, gameId, roomName, players, deck, deckStyle) {
                 if (!discardPiles[i].childNodes[0].childNodes[0].className.includes("empty")) {
 
                     discardPiles[i].childNodes[0].className = "card clickable";
+                }
+
+                else {
+
+                    discardPiles[i].childNodes[0].className = "card";
                 }
             }
         }

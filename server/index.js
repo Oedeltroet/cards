@@ -257,8 +257,6 @@ io.on("connection", (socket) => {
 
         socket.on("DRAW", () => {
 
-          console.log("Player " + playerId + " wants to draw.");
-
           if (game.playerTurn == playerId) {
 
             game.drawHand(playerId);
@@ -279,8 +277,30 @@ io.on("connection", (socket) => {
 
           if (game.transfer(originPile, targetPile)) {
 
+            // from stock pile
+            if (originPile == 0) {
+
+              // ... TODO
+            }
+
+            // from discard pile
+            else if (originPile <= 4) {
+
+              let discardPile = game.playerCards[playerId][(originPile - 1) + 2];
+
+              if (discardPile.size == 0) {
+
+                io.to(roomName).emit("UPDATE_DISCARD_PILE", playerId, originPile - 1, discardPile.size);
+              }
+
+              else {
+
+                io.to(roomName).emit("UPDATE_DISCARD_PILE", playerId, originPile - 1, discardPile.size, discardPile.topCard.suit, discardPile.topCard.value);
+              }
+            }
+
             // from hand cards
-            if (originPile >= 5) {
+            else {
 
               let handCards = game.playerCards[playerId][1];
               let arr = [];
@@ -298,17 +318,21 @@ io.on("connection", (socket) => {
 
               let discardPile = game.playerCards[playerId][targetPile - 2];
 
-              if (discardPile.size == 0) {
+              // if (discardPile.size == 0) {
 
-                io.to(roomName).emit("UPDATE_DISCARD_PILE", playerId, targetPile - 4, discardPile.size);
-              }
+              //   io.to(roomName).emit("UPDATE_DISCARD_PILE", playerId, targetPile - 4, discardPile.size);
+              // }
 
-              else {
+              // else {
 
                 io.to(roomName).emit("UPDATE_DISCARD_PILE", playerId, targetPile - 4, discardPile.size, discardPile.topCard.suit, discardPile.topCard.value);
-              }
+              // }
 
               game.nextTurn();
+
+              // very ugly code, but i haven't come up with a better solution yet
+              io.to(roomName).emit("TURN", game.playerTurn);
+              io.to(roomName).emit("TURN", game.playerTurn);
               io.to(roomName).emit("TURN", game.playerTurn);
             }
 
