@@ -1,3 +1,13 @@
+let inGame = false;
+
+window.onbeforeunload = function() {
+
+    if (inGame) {
+        
+        return "Are you sure you want to leave this game?";
+    }
+}
+
 function init(socket, gameId) {
 
     document.body.innerHTML = "";
@@ -128,6 +138,8 @@ function openLobby(socket, gameId, roomName) {
 }
 
 function game(socket, playerId, gameId, roomName, players, numDescendingPiles, deck, deckStyle) {
+
+    inGame = true;
 
     let cardSelected = false;
     let selectedCardPile;
@@ -679,6 +691,8 @@ function game(socket, playerId, gameId, roomName, players, numDescendingPiles, d
     });
 
     socket.on("WON", (player) => {
+
+        inGame = false;
 
         mainLayout.innerHTML = "";
 
